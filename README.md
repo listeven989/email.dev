@@ -28,7 +28,7 @@ npm run cron:all
 
 Add a row in the `email_accounts` with your email provider.
 
-You should be able to insert data into the db directly and have the email campaigns run them.
+You should be able to insert data into the db directly and have the email campaigns run them. The `/cronJobs` does the outbound.
 
 If you have any questions or issues, feel free to throw a new Github issue and I will respond.
 

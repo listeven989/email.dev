@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx ts-node load-html.ts"
+    "start": "npx ts-node scripts/load-test-email-template.ts"
   },
   "keywords": [],
   "author": "steven4354",

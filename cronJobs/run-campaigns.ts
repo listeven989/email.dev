@@ -45,8 +45,6 @@ async function sendCampaignEmails() {
     const campaignsResult = await client.query(campaignsQuery);
     const campaigns = campaignsResult.rows;
 
-    console.log("Campaigns result:", campaignsResult.rows);
-
     // Process each campaign
     for (const campaign of campaigns) {
       // Calculate the number of emails to send for the current campaign
@@ -54,10 +52,10 @@ async function sendCampaignEmails() {
 
       // Get recipient emails for the current campaign (with emails_sent_today < emailsToSend)
       const recipientsQuery = `
-      SELECT recipient_emails.email_address
-      FROM recipient_emails
-      JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
-      WHERE recipient_emails.campaign_id = $1 AND campaigns.emails_sent_today < $2
+          SELECT recipient_emails.email_address
+          FROM recipient_emails
+          JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
+          WHERE recipient_emails.campaign_id = $1 AND campaigns.emails_sent_today < $2
         `;
       const recipientsResult = await client.query(recipientsQuery, [
         campaign.campaign_id,
@@ -86,32 +84,20 @@ async function sendCampaignEmails() {
           html: campaign.html_content,
         });
 
-        // Update the emails_sent_today for the recipient email in the database
-        const updateSentCountQuery = `
-        UPDATE campaigns
-        SET emails_sent_today = emails_sent_today + 1
-        WHERE id = $1
+        // Update the emails_sent_today for the current campaign in the database
+        const updateEmailsSentTodayQuery = `
+            UPDATE campaigns
+            SET emails_sent_today = emails_sent_today + 1
+            WHERE id = $1
           `;
-        await client.query(updateSentCountQuery, [
+        await client.query(updateEmailsSentTodayQuery, [
           campaign.campaign_id,
-          recipient.email_address,
         ]);
 
         console.log(
           `Sent email to ${recipient.email_address} for campaign ${campaign.campaign_id}`
         );
       }
-
-      // Update the emails_sent_today for the current campaign in the database
-      const updateEmailsSentTodayQuery = `
-          UPDATE campaigns
-          SET emails_sent_today = emails_sent_today + $1
-          WHERE id = $2
-        `;
-      await client.query(updateEmailsSentTodayQuery, [
-        recipients.length,
-        campaign.campaign_id,
-      ]);
     }
 
     // Close the database connection
@@ -121,9 +107,8 @@ async function sendCampaignEmails() {
   }
 }
 
-// Schedule the cron job to run every 10 seconds
-// TODO(@steven4354): make this slower after testing to be every hour or so
-cron.schedule("*/10 * * * *", () => {
+// Schedule the cron job to run every minute
+cron.schedule("* * * * *", () => {
   console.log("Running email sender cron job every minute");
   sendCampaignEmails()
     .then(() => {

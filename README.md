@@ -8,6 +8,13 @@ Please feel free to add issues and pull requests. For GH issues, I will try to t
 
 Grab a neon.tech postgres database (or anywhere else)
 
-Run `db.sql` on it
+Run
 
-TODO: Set up the crons for running the email outbound automations. You should be able to insert data into the db directly and have the email campaigns run
+```bash
+npm run setup:db
+npm run cron:all
+```
+
+Add a row in the `email_accounts` with your email provider.
+
+You should be able to insert data into the db directly and have the email campaigns run them.

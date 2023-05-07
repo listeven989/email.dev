@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create the email_accounts table
-CREATE TABLE email_accounts (
+CREATE TABLE IF NOT EXISTS email_accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email_address VARCHAR(255) NOT NULL UNIQUE,
     display_name VARCHAR(255),
@@ -15,7 +15,7 @@ CREATE TABLE email_accounts (
 );
 
 -- Create the email_templates table
-CREATE TABLE email_templates (
+CREATE TABLE IF NOT EXISTS email_templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL UNIQUE,
     subject VARCHAR(255) NOT NULL,
@@ -26,20 +26,19 @@ CREATE TABLE email_templates (
 );
 
 -- Create the campaigns table
-CREATE TABLE campaigns (
+CREATE TABLE IF NOT EXISTS campaigns (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email_account_id UUID NOT NULL REFERENCES email_accounts(id) ON DELETE CASCADE,
     email_template_id UUID REFERENCES email_templates(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL,
     subject VARCHAR(255) NOT NULL,
-    from_email_address VARCHAR(255) NOT NULL,
     reply_to_email_address VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Create the recipient_emails table
-CREATE TABLE recipient_emails (
+CREATE TABLE IF NOT EXISTS recipient_emails (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     email_address VARCHAR(255) NOT NULL,
@@ -48,3 +47,22 @@ CREATE TABLE recipient_emails (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Add daily_limit and emails_sent_today columns to campaigns table
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'daily_limit') THEN
+    ALTER TABLE campaigns
+    ADD COLUMN daily_limit INT;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'emails_sent_today') THEN
+    ALTER TABLE campaigns
+    ADD COLUMN emails_sent_today INT DEFAULT 0;
+  END IF;
+END $$;
+
+-- Update the sample campaign with daily limit
+UPDATE campaigns
+SET daily_limit = 100
+WHERE name = 'Sample Campaign';

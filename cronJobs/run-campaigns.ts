@@ -45,16 +45,19 @@ async function sendCampaignEmails() {
     const campaignsResult = await client.query(campaignsQuery);
     const campaigns = campaignsResult.rows;
 
+    console.log("Campaigns result:", campaignsResult.rows);
+
     // Process each campaign
     for (const campaign of campaigns) {
       // Calculate the number of emails to send for the current campaign
       const emailsToSend = campaign.daily_limit - campaign.emails_sent_today;
 
-      // Get recipient emails for the current campaign (with sent_count < emailsToSend)
+      // Get recipient emails for the current campaign (with emails_sent_today < emailsToSend)
       const recipientsQuery = `
-          SELECT email_address
-          FROM recipient_emails
-          WHERE campaign_id = $1 AND sent_count < $2
+      SELECT recipient_emails.email_address
+      FROM recipient_emails
+      JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
+      WHERE recipient_emails.campaign_id = $1 AND campaigns.emails_sent_today < $2
         `;
       const recipientsResult = await client.query(recipientsQuery, [
         campaign.campaign_id,
@@ -83,11 +86,11 @@ async function sendCampaignEmails() {
           html: campaign.html_content,
         });
 
-        // Update the sent_count for the recipient email in the database
+        // Update the emails_sent_today for the recipient email in the database
         const updateSentCountQuery = `
-            UPDATE recipient_emails
-            SET sent_count = sent_count + 1
-            WHERE campaign_id = $1 AND email_address = $2
+        UPDATE campaigns
+        SET emails_sent_today = emails_sent_today + 1
+        WHERE id = $1
           `;
         await client.query(updateSentCountQuery, [
           campaign.campaign_id,
@@ -118,8 +121,9 @@ async function sendCampaignEmails() {
   }
 }
 
-// Schedule the cron job to run every minute
-cron.schedule("* * * * *", () => {
+// Schedule the cron job to run every 10 seconds
+// TODO(@steven4354): make this slower after testing to be every hour or so
+cron.schedule("*/10 * * * *", () => {
   console.log("Running email sender cron job every minute");
   sendCampaignEmails()
     .then(() => {

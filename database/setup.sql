@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email_account_id UUID NOT NULL REFERENCES email_accounts(id) ON DELETE CASCADE,
     email_template_id UUID REFERENCES email_templates(id) ON DELETE SET NULL,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     subject VARCHAR(255) NOT NULL,
     reply_to_email_address VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),

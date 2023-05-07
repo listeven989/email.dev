@@ -1,0 +1,23 @@
+{
+  "name": "email-outbound",
+  "version": "1.0.0",
+  "description": "Open sourced version of mailchimp, instantly, replyio - cause why wait for these closed-sourced companies to support the features you or your marketing team needs when you can just spin up a PR and get it immediately available?",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx ts-node load-html.ts"
+  },
+  "keywords": [],
+  "author": "steven4354",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "pg": "^8.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.1.0",
+    "@types/pg": "^8.6.6",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  }
+}

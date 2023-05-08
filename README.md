@@ -6,8 +6,6 @@ Please feel free to add Github issues and pull requests.
 
 For Github issues, I will try to throw up a PR when I have time. Otherwise feel free to contribute with a PR and I will try to review within 24 hours.
 
-Anything merged to main will be autodeployed
-
 # Features
 
 - unlimited sender email addresses 

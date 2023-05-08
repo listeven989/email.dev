@@ -23,7 +23,9 @@ See the Github `Issues` section for new features that are being added. Feel free
 
 # Setup
 
-Spin up postgres database (locally or you can get a hosted one, I use neon.tech) and create/fill out the `.env` file from `.env.example`
+Spin up postgres database (locally or you can get a hosted one - I use `neon.tech`).
+
+Create/fill out the `.env` file from `.env.example`
 
 Get an email account setup (preferrably with a custom domain). Any smtp provider will work, I use zoho since its only $12/yr for a custom domain.
 

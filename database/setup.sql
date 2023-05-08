@@ -83,3 +83,21 @@ BEGIN
     ADD COLUMN status campaign_status NOT NULL DEFAULT 'paused';
   END IF;
 END $$;
+
+-- Add daily_limit and emails_sent_today columns to campaigns table
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'daily_limit') THEN
+    ALTER TABLE campaigns
+    ADD COLUMN daily_limit INT DEFAULT 20;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'emails_sent_today') THEN
+    ALTER TABLE campaigns
+    ADD COLUMN emails_sent_today INT DEFAULT 0;
+  END IF;
+END $$;
+
+-- Remove the UNIQUE constraint from the name column in the email_templates table
+ALTER TABLE email_templates
+DROP CONSTRAINT email_templates_name_key;

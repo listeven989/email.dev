@@ -56,7 +56,7 @@ async function sendCampaignEmails() {
           SELECT recipient_emails.email_address
           FROM recipient_emails
           JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
-          WHERE recipient_emails.campaign_id = $1 AND campaigns.emails_sent_today < $2
+          WHERE recipient_emails.campaign_id = $1 AND campaigns.emails_sent_today < $2 AND recipient_emails.sent = false
         `;
       const recipientsResult = await client.query(recipientsQuery, [
         campaign.campaign_id,
@@ -108,6 +108,28 @@ async function sendCampaignEmails() {
         console.log(
           `Sent email to ${recipient.email_address} for campaign ${campaign.campaign_id}`
         );
+      }
+
+      // Check if all recipient emails are sent for the current campaign
+      const unsentEmailsQuery = `
+        SELECT COUNT(*)
+        FROM recipient_emails
+        WHERE campaign_id = $1 AND sent = false
+      `;
+      const unsentEmailsResult = await client.query(unsentEmailsQuery, [
+        campaign.campaign_id,
+      ]);
+      const unsentEmailsCount = parseInt(unsentEmailsResult.rows[0].count);
+
+      // If all recipient emails are sent, set the campaign status to 'completed'
+      if (unsentEmailsCount === 0) {
+        const updateCampaignStatusQuery = `
+          UPDATE campaigns
+          SET status = 'completed'
+          WHERE id = $1
+        `;
+        await client.query(updateCampaignStatusQuery, [campaign.campaign_id]);
+        console.log(`Campaign ${campaign.campaign_id} is completed.`);
       }
     }
 

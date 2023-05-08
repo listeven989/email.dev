@@ -95,7 +95,7 @@ async function sendCampaignEmails() {
         // Update the recipient_emails table, set sent from false to true
         const updateRecipientEmailsQuery = `
           UPDATE recipient_emails
-          SET sent = true
+          SET sent = true, sent_at = NOW()
           WHERE email_address = $1 AND campaign_id = $2
         `;
 

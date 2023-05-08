@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "setup:db": "npx ts-node scripts/setup-db.ts",
-    "cron:all": "npm run cron:campaigns & npm run cron:limit",
+    "cron:all": "npx ts-node cronJobs/index.ts",
     "cron:campaigns": "npx ts-node cronJobs/run-campaigns.ts",
     "cron:limit": "npx ts-node cronJobs/reset-campaign-daily-limits.ts"
   },

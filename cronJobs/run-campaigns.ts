@@ -77,13 +77,19 @@ async function sendCampaignEmails() {
 
       // Send the email to each recipient
       for (const recipient of recipients) {
-        await transporter.sendMail({
+        const sendMailOpts: any = {
           from: `${campaign.display_name} <${campaign.from_email}>`,
           to: recipient.email_address,
           subject: campaign.subject,
-          text: campaign.text_content,
-          html: campaign.html_content,
-        });
+        };
+
+        if (campaign.html_content) {
+          sendMailOpts["html"] = campaign.html_content;
+        } else {
+          sendMailOpts["text"] = campaign.text_content;
+        }
+
+        await transporter.sendMail(sendMailOpts);
 
         // Update the emails_sent_today for the current campaign in the database
         const updateEmailsSentTodayQuery = `

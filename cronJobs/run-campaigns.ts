@@ -83,7 +83,10 @@ async function sendCampaignEmails() {
           subject: campaign.subject,
         };
 
-        if (campaign.html_content) {
+        if (campaign.html_content && campaign.text_content) {
+          sendMailOpts["html"] = campaign.html_content;
+          sendMailOpts["text"] = campaign.text_content;
+        } else if (campaign.html_content) {
           sendMailOpts["html"] = campaign.html_content;
         } else {
           sendMailOpts["text"] = campaign.text_content;

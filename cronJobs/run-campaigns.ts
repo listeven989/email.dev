@@ -90,7 +90,17 @@ async function sendCampaignEmails() {
             SET emails_sent_today = emails_sent_today + 1
             WHERE id = $1
           `;
-        await client.query(updateEmailsSentTodayQuery, [
+        await client.query(updateEmailsSentTodayQuery, [campaign.campaign_id]);
+
+        // Update the recipient_emails table, set sent from false to true
+        const updateRecipientEmailsQuery = `
+          UPDATE recipient_emails
+          SET sent = true
+          WHERE email_address = $1 AND campaign_id = $2
+        `;
+
+        await client.query(updateRecipientEmailsQuery, [
+          recipient.email_address,
           campaign.campaign_id,
         ]);
 

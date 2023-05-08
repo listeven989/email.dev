@@ -64,5 +64,22 @@ END $$;
 
 -- Update the sample campaign with daily limit
 UPDATE campaigns
-SET daily_limit = 100
+SET daily_limit = 20
 WHERE name = 'Sample Campaign';
+
+-- Create campaign_status ENUM type
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'campaign_status') THEN
+    CREATE TYPE campaign_status AS ENUM ('paused', 'active', 'completed');
+  END IF;
+END $$;
+
+-- Add status column to campaigns table with campaign_status ENUM type
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'status') THEN
+    ALTER TABLE campaigns
+    ADD COLUMN status campaign_status NOT NULL DEFAULT 'paused';
+  END IF;
+END $$;

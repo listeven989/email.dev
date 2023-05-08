@@ -23,7 +23,7 @@ async function sendCampaignEmails() {
     const client = new Client(connectionString);
     await client.connect();
 
-    // Get campaigns and their associated email templates and email accounts
+    // Get active campaigns and their associated email templates and email accounts
     const campaignsQuery = `
         SELECT 
           campaigns.id AS campaign_id,
@@ -41,6 +41,7 @@ async function sendCampaignEmails() {
         FROM campaigns
         JOIN email_templates ON campaigns.email_template_id = email_templates.id
         JOIN email_accounts ON campaigns.email_account_id = email_accounts.id
+        WHERE campaigns.status = 'active'
       `;
     const campaignsResult = await client.query(campaignsQuery);
     const campaigns = campaignsResult.rows;

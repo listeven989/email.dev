@@ -1,0 +1,7 @@
+.env
+
+# database
+private-seed.sql
+
+# typescript
+node_modules

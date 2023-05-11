@@ -5,8 +5,10 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const EMAIL_FILE_PATH = 'scripts/email-templates/index.html';
-const RECIPIENT_EMAILS = ['steven4354+1@example.com', 'steven4354+2@example.com', 'steven4354+6@example.com'];
+const RECIPIENT_EMAILS = ['steven4354+1@gmail.com', 'steven4354+2@gmail.com', 'steven4354+6@gmail.com'];
 const EMAIL_ACCOUNT_ID = 'c594b7eb-a1c3-42dc-94e7-8dc6fae1d26e' // 'your_email_account_id'
+const CAMPAIGN_SUBJECT = 'Some Campaign Subject ' + Math.floor(Math.random() * 100);
+const CAMPAIGN_NAME = 'Campaign Name ' + Math.floor(Math.random() * 100);
 
 // Configure the PostgreSQL connection
 const connectionString = {
@@ -29,14 +31,12 @@ async function loadHtmlToDatabase() {
     const client = new Client(connectionString);
     await client.connect();
 
-    // Grab the first email 
-
     // Make a new campaign
     const campaignResult = await client.query(`
-      INSERT INTO campaigns (email_account_id, name, subject, daily_limit)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO campaigns (email_account_id, name, subject, daily_limit, status)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING id
-    `, [EMAIL_ACCOUNT_ID, 'New Campaign', 'Campaign Subject', 20]);
+    `, [EMAIL_ACCOUNT_ID, CAMPAIGN_NAME, CAMPAIGN_SUBJECT, 20, 'active']);
     const campaignId = campaignResult.rows[0].id;
 
     // Insert the HTML content into the email_templates table and associate it with the new campaign

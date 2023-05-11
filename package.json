@@ -1,31 +1,12 @@
 {
   "name": "email-outbound",
   "version": "1.0.0",
-  "description": "Open sourced version of mailchimp, instantly, replyio - cause why wait for these closed-sourced companies to support the features you or your marketing team needs when you can just spin up a PR and get it immediately available?",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test:html": "npx ts-node scripts/load-test-email-template.ts",
-    "setup:db": "npx ts-node scripts/setup-db.ts",
-    "cron:all": "npx ts-node cronJobs/index.ts",
-    "cron:campaigns": "npx ts-node cronJobs/run-campaigns.ts",
-    "cron:limit": "npx ts-node cronJobs/reset-campaign-daily-limits.ts"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "steven4354",
-  "license": "ISC",
-  "dependencies": {
-    "dotenv": "^16.0.3",
-    "node-cron": "^3.0.2",
-    "nodemailer": "^6.9.1",
-    "pg": "^8.10.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.1.0",
-    "@types/node-cron": "^3.0.7",
-    "@types/nodemailer": "^6.4.7",
-    "@types/pg": "^8.6.6",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
-  }
+  "license": "ISC"
 }

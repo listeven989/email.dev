@@ -16,8 +16,8 @@ BEGIN
     SELECT id INTO v_email_template_id FROM email_templates WHERE name = 'Welcome Email';
 
     -- Insert a sample campaign
-    INSERT INTO campaigns (email_account_id, email_template_id, name, subject, reply_to_email_address)
-    VALUES (v_email_account_id, v_email_template_id, 'Sample Campaign', 'Welcome to our site', 'your_email@zoho.com');
+    INSERT INTO campaigns (email_account_id, email_template_id, name, reply_to_email_address)
+    VALUES (v_email_account_id, v_email_template_id, 'Sample Campaign', 'your_email@zoho.com');
 
     -- Get the ID of the sample campaign
     DECLARE v_campaign_id UUID;

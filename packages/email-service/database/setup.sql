@@ -31,7 +31,6 @@ CREATE TABLE IF NOT EXISTS campaigns (
     email_account_id UUID NOT NULL REFERENCES email_accounts(id) ON DELETE CASCADE,
     email_template_id UUID REFERENCES email_templates(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL UNIQUE,
-    subject VARCHAR(255) NOT NULL,
     reply_to_email_address VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -98,6 +97,30 @@ BEGIN
   END IF;
 END $$;
 
--- Remove the UNIQUE constraint from the name column in the email_templates table
-ALTER TABLE email_templates
-DROP CONSTRAINT email_templates_name_key;
+-- Check if the UNIQUE constraint exists before dropping it
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.table_constraints
+    WHERE constraint_name = 'email_templates_name_key'
+      AND table_name = 'email_templates'
+  ) THEN
+    ALTER TABLE email_templates
+    DROP CONSTRAINT email_templates_name_key;
+  END IF;
+END $$;
+
+-- Delete the subject column in the campaigns table
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'campaigns'
+      AND column_name = 'subject'
+  ) THEN
+    ALTER TABLE campaigns
+    DROP COLUMN subject;
+  END IF;
+END $$;

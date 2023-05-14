@@ -17,6 +17,8 @@ const Links = [
   //   { name: "Dashboard", href: "/dashboard" },
   { name: "Campaigns", href: "/campaigns" },
   { name: "Email Accounts", href: "/email-accounts" },
+  { name: "Email Tester", href: "/email-templates/test" },
+  { name: "Email Templates", href: "/email-templates" },
   { name: "Settings", href: "/settings" },
   //   { name: "Features", href: "/features" },
   //   { name: "Pricing", href: "/pricing" },
@@ -75,7 +77,7 @@ const Navbar = () => {
           onClick={isOpen ? onClose : onOpen}
         />
         <HStack spacing={8} alignItems={"center"}>
-          <Box>Email Outbound Logo</Box>
+          <Box>Logo</Box>
           <HStack as={"nav"} spacing={4} display={{ base: "none", md: "flex" }}>
             {Links.map((link) => (
               <NavLink key={link.href} href={link.href}>
@@ -86,7 +88,7 @@ const Navbar = () => {
         </HStack>
         <Flex alignItems={"center"}>
           <Link href={"#"} color={"blue.500"}>
-            Sign In
+            Sign Out
           </Link>
         </Flex>
       </Flex>

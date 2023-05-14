@@ -123,7 +123,7 @@ const resolvers = {
       return result.rows;
     },
     emailTemplates: async () => {
-      const result = await pool.query("SELECT * FROM email_templates");
+      const result = await pool.query("SELECT * FROM email_templates ORDER BY created_at DESC");
       return result.rows;
     },
     campaigns: async () => {

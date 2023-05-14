@@ -22,6 +22,40 @@ See the Github `Issues` section for new features that are being added. Feel free
 ## Common commands
 
 ```bash
+# development / local
 pnpm --filter email-service cron:all
 pnpm --filter web-app dev
+pnpm --filter graphql-server start
+
+# new database migrations
+pnpm --filter email-service setup:db
+
+# production / build
+pnpm --filter graphql-server build
+pnpm --filter graphql-server serve
+
+pnpm --filter web-app build
+pnpm --filter web-app start
+```
+
+logging file structure
+
+```bash
+#!/bin/bash
+
+function list_files() {
+  local indent="$1"
+  local path="$2"
+
+  for item in "$path"/*; do
+    if [ -d "$item" ]; then
+      echo "${indent}- $(basename "$item")"
+      list_files "${indent}--" "$item"
+    else
+      echo "${indent}-- $(basename "$item")"
+    fi
+  done
+}
+
+list_files "-" "."
 ```

@@ -1,10 +1,10 @@
-import { ApolloServer, gql } from 'apollo-server';
-import { Client, Pool } from 'pg';
+import { ApolloServer, gql } from "apollo-server";
+import { Client, Pool } from "pg";
 
 // dotenv
-require('dotenv').config();
+require("dotenv").config();
 
-const client = new Client({
+const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_DATABASE,
@@ -13,9 +13,10 @@ const client = new Client({
   ssl: {
     rejectUnauthorized: false,
   },
+  connectionTimeoutMillis: 5000, // Add this line to set a connection timeout
 });
 
-client.connect();
+pool.connect();
 
 const typeDefs = gql`
   type EmailAccount {
@@ -67,6 +68,7 @@ const typeDefs = gql`
     emailAccounts: [EmailAccount]
     emailTemplates: [EmailTemplate]
     campaigns: [Campaign]
+    campaign(id: ID!): Campaign
     recipientEmails: [RecipientEmail]
   }
 
@@ -80,6 +82,8 @@ const typeDefs = gql`
       password: String!
     ): EmailAccount
 
+    updateCampaignStatus(id: ID!, status: String!): Campaign
+
     createEmailTemplate(
       name: String!
       subject: String!
@@ -91,11 +95,10 @@ const typeDefs = gql`
       email_account_id: ID!
       email_template_id: ID
       name: String!
-      subject: String!
       reply_to_email_address: String
       daily_limit: Int
       emails_sent_today: Int
-      status: String!
+      status: String
     ): Campaign
 
     createRecipientEmail(
@@ -110,19 +113,26 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     emailAccounts: async () => {
-      const result = await client.query('SELECT * FROM email_accounts');
+      const result = await pool.query("SELECT * FROM email_accounts");
       return result.rows;
     },
     emailTemplates: async () => {
-      const result = await client.query('SELECT * FROM email_templates');
+      const result = await pool.query("SELECT * FROM email_templates");
       return result.rows;
     },
     campaigns: async () => {
-      const result = await client.query('SELECT * FROM campaigns');
+      const result = await pool.query(
+        "SELECT * FROM campaigns ORDER BY created_at DESC"
+      );
       return result.rows;
     },
+    // @ts-ignore
+    campaign: async (_, { id }) => {
+      const result = await pool.query('SELECT * FROM campaigns WHERE id = $1', [id]);
+      return result.rows[0];
+    },
     recipientEmails: async () => {
-      const result = await client.query('SELECT * FROM recipient_emails');
+      const result = await pool.query("SELECT * FROM recipient_emails");
       return result.rows;
     },
   },
@@ -138,8 +148,8 @@ const resolvers = {
         password,
       }: any
     ) => {
-      const result = await client.query(
-        'INSERT INTO email_accounts (email_address, display_name, smtp_host, smtp_port, username, password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      const result = await pool.query(
+        "INSERT INTO email_accounts (email_address, display_name, smtp_host, smtp_port, username, password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
         [email_address, display_name, smtp_host, smtp_port, username, password]
       );
       return result.rows[0];
@@ -148,8 +158,8 @@ const resolvers = {
       _: any,
       { name, subject, text_content, html_content }: any
     ) => {
-      const result = await client.query(
-        'INSERT INTO email_templates (name, subject, text_content, html_content) VALUES ($1, $2, $3, $4) RETURNING *',
+      const result = await pool.query(
+        "INSERT INTO email_templates (name, subject, text_content, html_content) VALUES ($1, $2, $3, $4) RETURNING *",
         [name, subject, text_content, html_content]
       );
       return result.rows[0];
@@ -158,22 +168,25 @@ const resolvers = {
       _: any,
       {
         email_account_id,
-        email_template_id,
+        email_template_id = null,
         name,
-        subject,
         reply_to_email_address,
-        daily_limit,
-        emails_sent_today,
-        status,
+        daily_limit = 50,
+        emails_sent_today = 0,
+        status = "paused",
       }: any
     ) => {
-      const result = await client.query(
-        'INSERT INTO campaigns (email_account_id, email_template_id, name, subject, reply_to_email_address, daily_limit, emails_sent_today, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      // if daily limit is 0, set it to 50
+      if (daily_limit === 0) {
+        daily_limit = 50;
+      }
+
+      const result = await pool.query(
+        "INSERT INTO campaigns (email_account_id, email_template_id, name, reply_to_email_address, daily_limit, emails_sent_today, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
         [
           email_account_id,
           email_template_id,
           name,
-          subject,
           reply_to_email_address,
           daily_limit,
           emails_sent_today,
@@ -186,16 +199,50 @@ const resolvers = {
       _: any,
       { campaign_id, email_address, sent, sent_at }: any
     ) => {
-      const result = await client.query(
-        'INSERT INTO recipient_emails (campaign_id, email_address, sent, sent_at) VALUES ($1, $2, $3, $4) RETURNING *',
+      const result = await pool.query(
+        "INSERT INTO recipient_emails (campaign_id, email_address, sent, sent_at) VALUES ($1, $2, $3, $4) RETURNING *",
         [campaign_id, email_address, sent, sent_at]
+      );
+      return result.rows[0];
+    },
+    updateCampaignStatus: async (_: any, { id, status }: any) => {
+      const result = await pool.query(
+        "UPDATE campaigns SET status = $1 WHERE id = $2 RETURNING *",
+        [status, id]
       );
       return result.rows[0];
     },
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const logRequest = async (req: any) => {
+  console.log("Request:", {
+    query: req.body.query,
+    variables: req.body.variables,
+    operationName: req.body.operationName,
+  });
+};
+
+const logResponse = (response: any) => {
+  if (response.errors) {
+    console.log("Error:", response.errors);
+  } else {
+    console.log("Success:", response.data);
+  }
+  return response;
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => {
+    await logRequest(req);
+    return {};
+  },
+  formatResponse: (response) => {
+    return logResponse(response);
+  },
+});
 
 server.listen({ port: 8300 }).then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);

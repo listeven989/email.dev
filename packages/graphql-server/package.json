@@ -18,10 +18,12 @@
     "apollo-server": "^3.12.0",
     "dotenv": "^16.0.3",
     "graphql": "^16.6.0",
+    "nodemailer": "^6.9.2",
     "pg": "^8.10.0",
     "typescript": "^5.0.4"
   },
   "devDependencies": {
+    "@types/nodemailer": "^6.4.7",
     "nodemon": "^2.0.22",
     "ts-node": "^10.9.1"
   }

@@ -77,6 +77,18 @@ const CREATE_EMAIL_TEMPLATE = gql`
   }
 `;
 
+const SEND_TEST_EMAIL = gql`
+  mutation SendTestEmail(
+    $emailTemplateId: ID!
+    $recipientEmail: String!
+  ) {
+    sendTestEmail(
+      emailTemplateId: $emailTemplateId
+      recipientEmail: $recipientEmail
+    )
+  }
+`;
+
 const AddTemplateAndRecipients = () => {
   const router = useRouter();
   const { campaignId } = router.query;
@@ -150,6 +162,24 @@ const AddTemplateAndRecipients = () => {
       },
     });
     router.push(`/campaigns/${campaignId}`);
+  };
+
+  const [sendTestEmail] = useMutation(SEND_TEST_EMAIL);
+  const {
+    isOpen: isTestEmailDialogOpen,
+    onOpen: onTestEmailDialogOpen,
+    onClose: onTestEmailDialogClose,
+  } = useDisclosure();
+  const [testEmailRecipient, setTestEmailRecipient] = useState("");
+
+  const handleSendTestEmail = async () => {
+    await sendTestEmail({
+      variables: {
+        emailTemplateId,
+        recipientEmail: testEmailRecipient,
+      },
+    });
+    onTestEmailDialogClose();
   };
 
   if (loading) return <p>Loading...</p>;
@@ -248,6 +278,12 @@ const AddTemplateAndRecipients = () => {
               >
                 Preview on Mobile
               </Button> */}
+              <Button
+                mt={4}
+                onClick={onTestEmailDialogOpen}
+              >
+                Send Test Email
+              </Button>
             </Box>
           )}
         </FormControl>

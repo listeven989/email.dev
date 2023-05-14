@@ -1,5 +1,6 @@
 import { ApolloServer, gql } from "apollo-server";
 import { Client, Pool } from "pg";
+import { createTransport } from "nodemailer"; // Add this line
 
 // dotenv
 require("dotenv").config();
@@ -73,6 +74,11 @@ const typeDefs = gql`
   }
 
   type Mutation {
+    sendTestEmail(
+      emailTemplateId: ID!
+      recipientEmail: String!
+    ): String
+
     createEmailAccount(
       email_address: String!
       display_name: String
@@ -137,6 +143,43 @@ const resolvers = {
     },
   },
   Mutation: {
+    // @ts-ignore
+    async sendTestEmail(_, { emailTemplateId, recipientEmail }) {
+      const result = await pool.query(
+        "SELECT * FROM email_templates WHERE id = $1",
+        [emailTemplateId]
+      );
+      const emailTemplate = result.rows[0];
+
+      if (!emailTemplate) {
+        throw new Error("Email template not found");
+      }
+
+      const transporter = createTransport({
+        host: "your_email_host",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "your_email_username",
+          pass: "your_email_password",
+        },
+      });
+
+      const mailOptions = {
+        from: "your_email_address",
+        to: recipientEmail,
+        subject: emailTemplate.subject,
+        text: emailTemplate.text_content,
+        html: emailTemplate.html_content,
+      };
+
+      try {
+        await transporter.sendMail(mailOptions);
+        return "Test email sent successfully";
+      } catch (error) {
+        throw new Error(`Error sending test email: ${error}`);
+      }
+    },
     createEmailAccount: async (
       _: any,
       {

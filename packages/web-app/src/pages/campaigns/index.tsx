@@ -34,6 +34,15 @@ const GET_CAMPAIGNS = gql`
   }
 `;
 
+const GET_RECIPIENT_EMAILS = gql`
+  query GetRecipientEmails($campaignId: ID!) {
+    recipientEmails(campaignId: $campaignId) {
+      id
+      sent
+    }
+  }
+`;
+
 const UPDATE_CAMPAIGN_STATUS = gql`
   mutation UpdateCampaignStatus($id: ID!, $status: String!) {
     updateCampaignStatus(id: $id, status: $status) {
@@ -42,6 +51,76 @@ const UPDATE_CAMPAIGN_STATUS = gql`
     }
   }
 `;
+
+const CampaignRow = ({ campaign, toggleCampaignStatus }: { campaign: any, toggleCampaignStatus: any }) => {
+  const { loading, error, data } = useQuery(GET_RECIPIENT_EMAILS, {
+    variables: { campaignId: campaign.id },
+  });
+
+  if (loading)
+    return (
+      <Tr>
+        <Td colSpan={7}>Loading...</Td>
+      </Tr>
+    );
+  if (error)
+    return (
+      <Tr>
+        <Td colSpan={7}>Error: {error.message}</Td>
+      </Tr>
+    );
+
+  const recipientEmails = data.recipientEmails;
+
+  return (
+    <Tr key={campaign.id}>
+      <Td>
+        <Link href={`/campaigns/${campaign.id}`} passHref>
+          <Text
+            as="a"
+            color="blue.500"
+            fontWeight="bold"
+            _hover={{ textDecoration: "underline" }}
+          >
+            {campaign.name}
+          </Text>
+        </Link>
+      </Td>
+      <Td>{campaign.reply_to_email_address}</Td>
+      <Td>{campaign.daily_limit}</Td>
+      <Td>{campaign.emails_sent_today}</Td>
+      
+      <Td>{recipientEmails.length}</Td>
+      <Td>
+        {recipientEmails.reduce(
+          (count: number, email: any) => (email.sent ? count + 1 : count),
+          0
+        )}
+      </Td>
+      <Td>
+        <Badge
+          colorScheme={campaign.status === "active" ? "green" : "red"}
+          borderRadius="md"
+          px={2}
+          py={1}
+        >
+          {campaign.status}
+        </Badge>
+      </Td>
+      <Td>
+        {campaign.status !== "completed" && (
+          <Button
+            size="xs"
+            colorScheme={campaign.status === "active" ? "red" : "green"}
+            onClick={() => toggleCampaignStatus(campaign)}
+          >
+            {campaign.status === "active" ? "Pause Campaign" : "Start Campaign"}
+          </Button>
+        )}
+      </Td>
+    </Tr>
+  );
+};
 
 const Campaigns = () => {
   const { loading, error, data } = useQuery(GET_CAMPAIGNS);
@@ -96,7 +175,7 @@ const Campaigns = () => {
           >
             <Thead bg="gray.500">
               <Tr>
-                <Th color="white" fontWeight="bold">
+              <Th color="white" fontWeight="bold">
                   Name
                 </Th>
                 <Th color="white" fontWeight="bold">
@@ -109,6 +188,12 @@ const Campaigns = () => {
                   Emails Sent Today
                 </Th>
                 <Th color="white" fontWeight="bold">
+                  Recipients
+                </Th>
+                <Th color="white" fontWeight="bold">
+                  Total Emails Sent
+                </Th>
+                <Th color="white" fontWeight="bold">
                   Status
                 </Th>
                 <Th color="white" fontWeight="bold">
@@ -118,50 +203,7 @@ const Campaigns = () => {
             </Thead>
             <Tbody>
               {campaigns.map((campaign: any) => (
-                <Tr key={campaign.id}>
-                  <Td>
-                    <Link href={`/campaigns/${campaign.id}`} passHref>
-                      <Text
-                        as="a"
-                        color="blue.500"
-                        fontWeight="bold"
-                        _hover={{ textDecoration: "underline" }}
-                      >
-                        {campaign.name}
-                      </Text>
-                    </Link>
-                  </Td>
-                  <Td>{campaign.reply_to_email_address}</Td>
-                  <Td>{campaign.daily_limit}</Td>
-                  <Td>{campaign.emails_sent_today}</Td>
-                  <Td>
-                    <Badge
-                      colorScheme={
-                        campaign.status === "active" ? "green" : "red"
-                      }
-                      borderRadius="md"
-                      px={2}
-                      py={1}
-                    >
-                      {campaign.status}
-                    </Badge>
-                  </Td>
-                  <Td>
-                    {campaign.status !== "completed" && (
-                      <Button
-                        size="xs"
-                        colorScheme={
-                          campaign.status === "active" ? "red" : "green"
-                        }
-                        onClick={() => toggleCampaignStatus(campaign)}
-                      >
-                        {campaign.status === "active"
-                          ? "Pause Campaign"
-                          : "Resume Campaign"}
-                      </Button>
-                    )}
-                  </Td>
-                </Tr>
+                <CampaignRow campaign={campaign} key={campaign.id} toggleCampaignStatus={toggleCampaignStatus} />
               ))}
             </Tbody>
           </Table>

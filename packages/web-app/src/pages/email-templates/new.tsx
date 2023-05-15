@@ -55,7 +55,7 @@ import {
           duration: 3000,
           isClosable: true,
         });
-      } catch (error) {
+      } catch (error: any) {
         toast({
           title: "Error creating email template.",
           description: error.message,

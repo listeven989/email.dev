@@ -93,7 +93,7 @@ const NewCampaign = () => {
                   onChange={(e) => setEmailAccountId(e.target.value)}
                   required
                 >
-                  {emailAccounts.map((account) => (
+                  {emailAccounts.map((account: any) => (
                     <option key={account.id} value={account.id}>
                       {account.email_address}
                     </option>
@@ -137,7 +137,10 @@ const NewCampaign = () => {
                 <Input
                   type="number"
                   value={dailyLimit ? dailyLimit : ""}
-                  onChange={(e) => setDailyLimit(e.target.value)}
+                  onChange={(e) => {
+                    // if e is string parseInt
+                    setDailyLimit(parseInt(e.target.value));
+                  }}
                   placeholder="optional"
                 />
               </FormControl>

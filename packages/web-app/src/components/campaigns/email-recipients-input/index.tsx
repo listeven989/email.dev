@@ -39,7 +39,12 @@ export default function EmailRecipientsInput({ setEmailAddresses, emailAddresses
             Papa.parse(file, {
                 header: true,
                 complete: (results) => {
-                    const emails = results.data.map((row: any) => row.Email);
+                    const emails = results.data.map((row: any) => row.Email).filter((email: string) => {
+                        if (email && email.includes("@")) {
+                            return email;
+                        }
+                        return null;
+                    });
                     setEmailAddresses(emails.join("\n"));
                     setParsedEmails(emails);
                 },

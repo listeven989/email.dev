@@ -39,7 +39,7 @@ const ADD_TEMPLATE_AND_RECIPIENTS = gql`
     $emailTemplateId: ID!
     $emailAddresses: [String!]!
   ) {
-    updateCampaign(id: $campaignId, email_template_id: $emailTemplateId) {
+    updateCampaignTemplate(id: $campaignId, email_template_id: $emailTemplateId) {
       id
     }
     addRecipientEmails(

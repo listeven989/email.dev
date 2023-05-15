@@ -14,7 +14,13 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000, // Add this line to set a connection timeout
 });
 
-export async function createUser(email: string, password: string) {
+interface User {
+  id: string;
+  email: string;
+}
+
+
+export async function createUser(email: string, password: string): Promise<User> {
   const hashedPassword = await bcrypt.hash(password, 10);
   const query = `
     INSERT INTO users (email, password)
@@ -27,12 +33,12 @@ export async function createUser(email: string, password: string) {
     const result = await pool.query(query, values);
     return result.rows[0];
   } catch (error: any) {
-    console.error("Error creating user:", error.message);
+    console.error('Error creating user:', error.message);
     throw error;
   }
 }
 
-export async function login(email: string, password: string) {
+export async function login(email: string, password: string): Promise<{ user: User; token: string }> {
   const query = `
     SELECT id, email, password
     FROM users
@@ -45,25 +51,21 @@ export async function login(email: string, password: string) {
     const user = result.rows[0];
 
     if (!user) {
-      throw new Error("Invalid email or password");
+      throw new Error('Invalid email or password');
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      throw new Error("Invalid email or password");
+      throw new Error('Invalid email or password');
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      "your-secret-key",
-      {
-        expiresIn: "1h",
-      }
-    );
+    const token = jwt.sign({ id: user.id, email: user.email }, 'your-secret-key', {
+      expiresIn: '1h',
+    });
 
     return { user: { id: user.id, email: user.email }, token };
   } catch (error: any) {
-    console.error("Error logging in:", error.message);
+    console.error('Error logging in:', error.message);
     throw error;
   }
 }

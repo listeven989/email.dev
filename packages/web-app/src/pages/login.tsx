@@ -1,5 +1,4 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
-import { login } from '@/lib/auth';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -9,10 +8,21 @@ function Login() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const { user, token } = await login(email, password);
-      console.log('Logged in successfully:', user, token);
-      localStorage.setItem('authToken', token);
-    } catch (error: any) {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', email, password }),
+      });
+
+      if (response.ok) {
+        const { user, token } = await response.json();
+        console.log('Logged in successfully:', user, token);
+        localStorage.setItem('authToken', token);
+      } else {
+        const { error } = await response.json();
+        setError(error);
+      }
+    } catch (error) {
       setError(error.message);
     }
   }

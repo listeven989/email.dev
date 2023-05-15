@@ -39,7 +39,10 @@ const ADD_TEMPLATE_AND_RECIPIENTS = gql`
     $emailTemplateId: ID!
     $emailAddresses: [String!]!
   ) {
-    updateCampaignTemplate(id: $campaignId, email_template_id: $emailTemplateId) {
+    updateCampaignTemplate(
+      id: $campaignId
+      email_template_id: $emailTemplateId
+    ) {
       id
     }
     addRecipientEmails(
@@ -51,7 +54,6 @@ const ADD_TEMPLATE_AND_RECIPIENTS = gql`
   }
 `;
 
-
 const AddTemplateAndRecipients = () => {
   const router = useRouter();
   const { campaignId } = router.query;
@@ -62,10 +64,6 @@ const AddTemplateAndRecipients = () => {
   const [emailAddresses, setEmailAddresses] = useState("");
 
   const [showNewTemplateForm, setShowNewTemplateForm] = useState(false);
-
-
-
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,20 +113,17 @@ const AddTemplateAndRecipients = () => {
 
           <CreateTemplateDropdown
             setShow={setShowNewTemplateForm}
-            show={showNewTemplateForm} />
+            show={showNewTemplateForm}
+          />
 
-          {selectedTemplate && (
-          <ViewTemplate template={selectedTemplate} />
-          )}
-          
+          {selectedTemplate && <ViewTemplate template={selectedTemplate} />}
         </FormControl>
 
-        <EmailRecipientsInput 
-        setEmailAddresses={setEmailAddresses}
-        emailAddresses={emailAddresses}
-        
+        <EmailRecipientsInput
+          setEmailAddresses={setEmailAddresses}
+          emailAddresses={emailAddresses}
         />
-       
+
         <Button type="submit" colorScheme="blue">
           Continue
         </Button>

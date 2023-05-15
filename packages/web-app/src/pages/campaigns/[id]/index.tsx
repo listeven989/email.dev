@@ -9,6 +9,9 @@ import {
   Text,
   Button,
   HStack,
+  Box,
+  Badge,
+  Flex,
 } from "@chakra-ui/react";
 import ViewTemplate from "@/components/ViewTemplate";
 
@@ -50,51 +53,47 @@ const Campaign = () => {
   const campaign = data.campaign;
 
   return (
-    <Container maxW="container.xl" py={12}>
+    <Container maxW="container.md" py={12}>
       {campaign ? (
-        <VStack spacing={6} align="center">
-          <Heading as="h1" size="md">
-            {campaign.name}
-          </Heading>
-          <VStack spacing={4} align="center">
-            <HStack spacing={8}>
-              <Text>Daily Limit: {campaign.daily_limit}</Text>
-
-              <Text>Emails Sent Today: {campaign.emails_sent_today}</Text>
-              <Text>Status: {campaign.status}</Text>
-
-            </HStack>
-            <Text>Reply To: {campaign.reply_to_email_address}</Text>
-
-          </VStack>
-
-          <HStack spacing={4}>
-            <Link href={`/campaigns/${id}/edit`} passHref>
-              <Button as="a" colorScheme="blue">
-                Edit Campaign
-              </Button>
-            </Link>
-            <Link href={`/campaigns/${id}/email-template`} passHref>
-              <Button as="a" colorScheme="blue">
-                Change Email Template
-              </Button>
-            </Link>
-            <Link href={`/campaigns/${id}/recipients`} passHref>
-              <Button as="a" colorScheme="blue">
-                Manage Recipients
-              </Button>
-            </Link>
-          </HStack>
-
-          {data.emailTemplateByCampaignId && (
-            <>
-              <Text fontWeight={800}>EMAIL TEMPLATE</Text>
-              <ViewTemplate template={data.emailTemplateByCampaignId} />
-            </>
-
-          )}
-
-
+        <VStack spacing={6} align="left">
+        <Heading as="h1" size="lg">Campaign Details</Heading>
+        <Box>
+          <Text fontWeight="bold">Campaign Name:</Text>
+          <Text>{campaign.name}</Text>
+        </Box>
+          <Box>
+            <Text fontWeight="bold">Daily Limit:</Text>
+            <Text>{campaign.daily_limit}</Text>
+          </Box>
+          <Box>
+            <Text fontWeight="bold">Emails Sent Today:</Text>
+            <Text>{campaign.emails_sent_today}</Text>
+          </Box>
+          <Box>
+            <Text fontWeight="bold">Status:</Text>
+            <Badge colorScheme={campaign.status === 'active' ? 'green' : 'red'}>
+              {campaign.status}
+            </Badge>
+          </Box>
+          <Box>
+          <Text fontWeight="bold">Reply To:</Text>
+          <Text>{campaign.reply_to_email_address || "n/a"}</Text>
+        </Box>
+        <Link href={`/campaigns/${id}/edit`} passHref>
+            <Button as="a" colorScheme="blue">
+              Edit Campaign
+            </Button>
+          </Link>
+          <Link href={`/campaigns/${id}/email-template`} passHref>
+            <Button as="a" colorScheme="blue">
+              View / Change Email Template
+            </Button>
+          </Link>
+          <Link href={`/campaigns/${id}/recipients`} passHref>
+            <Button as="a" colorScheme="blue">
+              Manage Recipients
+            </Button>
+          </Link>
         </VStack>
       ) : (
         <Text>No campaign found.</Text>

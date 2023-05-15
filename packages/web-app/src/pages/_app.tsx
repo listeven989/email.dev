@@ -5,7 +5,6 @@ import client from "../apolloClient";
 import "../styles/globals.css";
 import { ChakraProvider } from "@chakra-ui/react";
 import Navbar from "@/components/Navbar";
-import withPasswordProtection from "@/lib/withPasswordProtection";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (

@@ -50,7 +50,7 @@ const NewCampaign = () => {
   const { loading, error, data } = useQuery(GET_EMAIL_ACCOUNTS);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     const { data } = await createCampaign({
@@ -58,7 +58,7 @@ const NewCampaign = () => {
         email_account_id: emailAccountId,
         name,
         reply_to_email_address: replyToEmailAddress,
-        daily_limit: parseInt(dailyLimit),
+        daily_limit: dailyLimit,
       },
     });
 
@@ -73,7 +73,7 @@ const NewCampaign = () => {
 
   const emailAccounts = data.emailAccounts;
   const selectedEmailAccount = emailAccounts.find(
-    (account) => account.id === emailAccountId
+    (account: any) => account.id === emailAccountId
   );
 
   return (

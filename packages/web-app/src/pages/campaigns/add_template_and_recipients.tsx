@@ -13,13 +13,6 @@ import {
   Input,
   Text,
   Collapse,
-  AlertDialog,
-  AlertDialogOverlay,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogBody,
-  AlertDialogFooter,
-  useDisclosure,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useMutation, useQuery, gql } from "@apollo/client";
@@ -77,18 +70,6 @@ const CREATE_EMAIL_TEMPLATE = gql`
   }
 `;
 
-const SEND_TEST_EMAIL = gql`
-  mutation SendTestEmail(
-    $emailTemplateId: ID!
-    $recipientEmail: String!
-  ) {
-    sendTestEmail(
-      emailTemplateId: $emailTemplateId
-      recipientEmail: $recipientEmail
-    )
-  }
-`;
-
 const AddTemplateAndRecipients = () => {
   const router = useRouter();
   const { campaignId } = router.query;
@@ -106,17 +87,9 @@ const AddTemplateAndRecipients = () => {
   const [newTemplateSubject, setNewTemplateSubject] = useState("");
   const [newTextContent, setNewTextContent] = useState("");
   const [newHtmlContent, setNewHtmlContent] = useState("");
-  const [newTemplateContent, setNewTemplateContent] = useState("");
   const [createEmailTemplate] = useMutation(CREATE_EMAIL_TEMPLATE, {
     refetchQueries: [{ query: GET_EMAIL_TEMPLATES }],
   });
-
-  const {
-    isOpen: isPreviewDialogOpen,
-    onOpen: onPreviewDialogOpen,
-    onClose: onPreviewDialogClose,
-  } = useDisclosure();
-  const [previewType, setPreviewType] = useState("desktop");
 
   const handleCreateNewTemplate = async () => {
     await createEmailTemplate({
@@ -164,24 +137,6 @@ const AddTemplateAndRecipients = () => {
     router.push(`/campaigns/${campaignId}`);
   };
 
-  const [sendTestEmail] = useMutation(SEND_TEST_EMAIL);
-  const {
-    isOpen: isTestEmailDialogOpen,
-    onOpen: onTestEmailDialogOpen,
-    onClose: onTestEmailDialogClose,
-  } = useDisclosure();
-  const [testEmailRecipient, setTestEmailRecipient] = useState("");
-
-  const handleSendTestEmail = async () => {
-    await sendTestEmail({
-      variables: {
-        emailTemplateId,
-        recipientEmail: testEmailRecipient,
-      },
-    });
-    onTestEmailDialogClose();
-  };
-
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
@@ -194,7 +149,7 @@ const AddTemplateAndRecipients = () => {
   return (
     <Container maxW="container.md" py={12}>
       <VStack as="form" onSubmit={handleSubmit} spacing={6} align="start">
-      <FormControl id="emailTemplate">
+        <FormControl id="emailTemplate">
           <FormLabel>Email Template</FormLabel>
           <Select
             placeholder="Select email template"
@@ -255,7 +210,11 @@ const AddTemplateAndRecipients = () => {
               <FormLabel>Subject</FormLabel>
               <Input disabled value={selectedTemplate.subject} readOnly />
               <FormLabel mt={4}>Text Content</FormLabel>
-              <Textarea disabled value={selectedTemplate.text_content} readOnly />
+              <Textarea
+                disabled
+                value={selectedTemplate.text_content}
+                readOnly
+              />
               <FormLabel mt={4}>HTML Content</FormLabel>
               <Textarea value={selectedTemplate.html_content} readOnly />
               {/* TODO: preview not actually displaying correctly */}
@@ -280,7 +239,9 @@ const AddTemplateAndRecipients = () => {
               </Button> */}
               <Button
                 mt={4}
-                onClick={onTestEmailDialogOpen}
+                onClick={() => {
+                  window.open("/email-templates/test", "_blank");
+                }}
               >
                 Send Test Email
               </Button>
@@ -300,7 +261,7 @@ const AddTemplateAndRecipients = () => {
           </RadioGroup>
           {inputType === "text" ? (
             <Textarea
-            style={{ marginTop: "1rem" }}
+              style={{ marginTop: "1rem" }}
               placeholder="Enter email addresses, one per line"
               value={emailAddresses}
               onChange={(e) => setEmailAddresses(e.target.value)}
@@ -319,22 +280,29 @@ const AddTemplateAndRecipients = () => {
                   File: {fileName}
                 </Text>
               )}
-              {fileName && <Textarea
-                mt={4}
-                value={parsedEmails.join("\n")}
-                readOnly
-                maxHeight="200px"
-                overflowY="scroll"
-              />}
+              {fileName && (
+                <Textarea
+                  mt={4}
+                  value={parsedEmails.join("\n")}
+                  readOnly
+                  maxHeight="200px"
+                  overflowY="scroll"
+                />
+              )}
               <Button
                 style={{ marginTop: "1rem" }}
-                leftIcon={ fileName ? <FontAwesomeIcon icon={faRecycle} /> : <FontAwesomeIcon icon={faUpload} /> }
+                leftIcon={
+                  fileName ? (
+                    <FontAwesomeIcon icon={faRecycle} />
+                  ) : (
+                    <FontAwesomeIcon icon={faUpload} />
+                  )
+                }
                 // colorScheme="blue"
                 onClick={() => fileInputRef.current?.click()}
               >
-                { fileName ? "Pick Another CSV" : "Upload CSV" }
+                {fileName ? "Pick Another CSV" : "Upload CSV"}
               </Button>
-              
             </>
           )}
         </FormControl>
@@ -342,28 +310,6 @@ const AddTemplateAndRecipients = () => {
           Continue
         </Button>
       </VStack>
-
-      <AlertDialog
-        isOpen={isPreviewDialogOpen}
-        onClose={onPreviewDialogClose}
-        size={previewType === "desktop" ? "xl" : "xs"}
-        isCentered
-      >
-        <AlertDialogOverlay />
-        <AlertDialogContent>
-          <AlertDialogHeader>Preview</AlertDialogHeader>
-          <AlertDialogBody>
-            <Box
-              dangerouslySetInnerHTML={{
-                __html: selectedTemplate?.html_content || "",
-              }}
-            />
-          </AlertDialogBody>
-          <AlertDialogFooter>
-            <Button onClick={onPreviewDialogClose}>Close</Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Container>
   );
 };

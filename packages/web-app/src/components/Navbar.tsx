@@ -96,9 +96,10 @@ const Navbar = () => {
       {isOpen ? (
         <Box pb={4}>
           <Stack as={"nav"} spacing={4}>
-            {Links.map((link) => (
-              <NavLink key={link}>{link}</NavLink>
-            ))}
+            {Links.map((link) => {
+              // @ts-ignore
+              return <NavLink key={link}>{link}</NavLink>;
+            })}
           </Stack>
         </Box>
       ) : null}

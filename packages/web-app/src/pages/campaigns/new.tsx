@@ -50,7 +50,7 @@ const NewCampaign = () => {
   const { loading, error, data } = useQuery(GET_EMAIL_ACCOUNTS);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     const { data } = await createCampaign({
@@ -58,7 +58,7 @@ const NewCampaign = () => {
         email_account_id: emailAccountId,
         name,
         reply_to_email_address: replyToEmailAddress,
-        daily_limit: parseInt(dailyLimit),
+        daily_limit: dailyLimit,
       },
     });
 
@@ -73,7 +73,7 @@ const NewCampaign = () => {
 
   const emailAccounts = data.emailAccounts;
   const selectedEmailAccount = emailAccounts.find(
-    (account) => account.id === emailAccountId
+    (account: any) => account.id === emailAccountId
   );
 
   return (
@@ -93,7 +93,7 @@ const NewCampaign = () => {
                   onChange={(e) => setEmailAccountId(e.target.value)}
                   required
                 >
-                  {emailAccounts.map((account) => (
+                  {emailAccounts.map((account: any) => (
                     <option key={account.id} value={account.id}>
                       {account.email_address}
                     </option>
@@ -137,7 +137,10 @@ const NewCampaign = () => {
                 <Input
                   type="number"
                   value={dailyLimit ? dailyLimit : ""}
-                  onChange={(e) => setDailyLimit(e.target.value)}
+                  onChange={(e) => {
+                    // if e is string parseInt
+                    setDailyLimit(parseInt(e.target.value));
+                  }}
                   placeholder="optional"
                 />
               </FormControl>

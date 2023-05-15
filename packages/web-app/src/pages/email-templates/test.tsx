@@ -94,7 +94,7 @@ import {
           duration: 3000,
           isClosable: true,
         });
-      } catch (error) {
+      } catch (error: any) {
         toast({
           title: "Error sending test email.",
           description: error.message,

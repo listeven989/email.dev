@@ -15,31 +15,43 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
 import { useState, ChangeEvent, FormEvent } from "react";
+import { gql, useMutation } from "@apollo/client";
+
+const SIGNUP_MUTATION = gql`
+  mutation Signup($email: String!, $password: String!) {
+    signup(email: $email, password: $password) {
+      token
+      user {
+        id
+        email
+      }
+    }
+  }
+`;
 
 function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const [signup] = useMutation(SIGNUP_MUTATION);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "signup", email, password }),
+      const { data, errors } = await signup({
+        variables: { email, password },
       });
 
-      if (response.ok) {
-        const { user, token } = await response.json(); // Add token to the response
+      if (errors) {
+        setError(errors[0].message);
+      } else {
+        const { user, token } = data.signup;
         console.log("User created successfully:", user);
-        localStorage.setItem("authToken", token); // Store the token
+        localStorage.setItem("authToken", token);
 
         // Redirect to home page
         window.location.href = "/campaigns";
-      } else {
-        const { error } = await response.json();
-        setError(error);
       }
     } catch (error: any) {
       setError(error.message);

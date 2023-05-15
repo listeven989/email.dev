@@ -12,6 +12,7 @@ function AuthLink() {
   function handleSignOut() {
     localStorage.removeItem('authToken');
     setIsAuthenticated(false);
+    window.location.href = '/login';
   }
 
   return isAuthenticated ? (

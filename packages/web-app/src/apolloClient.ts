@@ -2,16 +2,16 @@ import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 
 const httpLink = createHttpLink({
-  uri: process.env.GQL_SERVER || 'http://localhost:8300/',
+  uri: process.env.NEXT_PUBLIC_GQL_SERVER,
 });
 
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('authToken');
 
-  if (!token) {
-    // direct to login page
-    window.location.href = '/login';
-  }
+  // if (!token) {
+  //   // direct to login page
+  //   window.location.href = '/login';
+  // }
 
   return {
     headers: {

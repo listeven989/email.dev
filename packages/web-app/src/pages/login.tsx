@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { gql, useMutation } from "@apollo/client";
 
 const LOGIN_MUTATION = gql`
@@ -30,26 +30,40 @@ const LOGIN_MUTATION = gql`
 `;
 
 function Login() {
+  useEffect(() => {
+    console.log(process.env.NEXT_PUBLIC_GQL_SERVER);
+    if (typeof window !== 'undefined') {
+      console.log(localStorage.getItem('authToken'));
+    }
+  }, []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const [login] = useMutation(LOGIN_MUTATION); // Add this line
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     try {
-      const { data, errors } = await login({
+      console.log("Starting login...");
+      const response = await login({
         variables: { email, password },
       });
-
+  
+      const { data, errors } = response;
+  
+      console.log("Response:", response);
+      console.log("Data:", data);
+      console.log("Errors:", errors);
+  
       if (errors) {
         setError(errors[0].message);
       } else {
         const { user, token } = data.login;
         console.log("Logged in successfully:", user, token);
         localStorage.setItem("authToken", token);
-        
+  
         // Redirect to home page
         window.location.href = "/campaigns";
       }
@@ -57,6 +71,7 @@ function Login() {
       setError(error.message);
     }
   }
+  
 
   return (
     <Flex

@@ -18,7 +18,7 @@ function AuthLink() {
     <button onClick={handleSignOut}>Sign Out</button>
   ) : (
     <Link href="/signup">
-      <div>Sign Up</div>
+      <div>Sign Up / Login</div>
     </Link>
   );
 }

@@ -1,33 +1,38 @@
 import {
-    Box,
-    Button,
-    FormControl,
-    FormLabel,
-    Input,
-    VStack,
-    Text,
-    Flex,
-    Center,
-  } from '@chakra-ui/react';
-  import { useState, ChangeEvent, FormEvent } from 'react';
+  Box,
+  Button,
+  Center,
+  Flex,
+  FormControl,
+  FormLabel,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  VStack,
+  Text,
+  Link,
+} from "@chakra-ui/react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
+import { useState, ChangeEvent, FormEvent } from "react";
 
 function Signup() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'signup', email, password }),
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "signup", email, password }),
       });
 
       if (response.ok) {
         const { user } = await response.json();
-        console.log('User created successfully:', user);
+        console.log("User created successfully:", user);
       } else {
         const { error } = await response.json();
         setError(error);
@@ -38,44 +43,73 @@ function Signup() {
   }
 
   return (
-    <Flex minHeight="100vh" alignItems="center" justifyContent="center">
+    <Flex
+      minHeight="calc(100vh - 60px)"
+      alignItems="center"
+      justifyContent="center"
+      bgGradient="linear(to-r, teal.500, green.500)"
+    >
       <Center
         as="form"
         onSubmit={handleSubmit}
         bg="white"
-        boxShadow="md"
-        borderRadius="md"
+        boxShadow="2xl"
+        borderRadius="xl"
         p={8}
         width="100%"
-        maxWidth="400px"
+        maxWidth="500px"
       >
-        <VStack spacing={4}>
-          <Text fontSize="2xl" fontWeight="bold">
+        <VStack spacing={6} width="69%">
+          <Text fontSize="3xl" fontWeight="bold" color="teal.500">
             Signup
           </Text>
           <FormControl id="email" isRequired>
             <FormLabel>Email:</FormLabel>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setEmail(e.target.value)
-              }
-            />
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <FontAwesomeIcon icon={faEnvelope} color="gray" />
+              </InputLeftElement>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setEmail(e.target.value)
+                }
+                width="100%"
+                maxWidth="300px"
+                pl="40px"
+              />
+            </InputGroup>
           </FormControl>
           <FormControl id="password" isRequired>
             <FormLabel>Password:</FormLabel>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setPassword(e.target.value)
-              }
-            />
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <FontAwesomeIcon icon={faLock} color="gray" />
+              </InputLeftElement>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setPassword(e.target.value)
+                }
+                width="100%"
+                maxWidth="300px"
+                pl="40px"
+              />
+            </InputGroup>
           </FormControl>
-          <Button type="submit" colorScheme="blue">
+          <Button type="submit" colorScheme="teal" size="md">
             Signup
           </Button>
+          <Text fontSize="sm">
+            Already have an account?{" "}
+            <Link href="/login">
+              <Text as="span" color="teal.500" textDecoration="underline">
+                Login
+              </Text>
+            </Link>
+          </Text>
         </VStack>
         {error && (
           <Text color="red.500" textAlign="center" marginTop={4}>

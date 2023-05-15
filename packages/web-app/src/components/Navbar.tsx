@@ -10,8 +10,9 @@ import {
   Stack,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import { useRouter } from "next/router";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 const Links = [
   //   { name: "Dashboard", href: "/dashboard" },
@@ -71,7 +72,7 @@ const Navbar = () => {
       <Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
         <IconButton
           size={"md"}
-          icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
+          icon={<FontAwesomeIcon icon={isOpen ? faTimes : faBars} />}
           aria-label={"Open Menu"}
           display={{ md: "none" }}
           onClick={isOpen ? onClose : onOpen}

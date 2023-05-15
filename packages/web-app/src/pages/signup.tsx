@@ -34,7 +34,9 @@ function Signup() {
         const { user, token } = await response.json(); // Add token to the response
         console.log("User created successfully:", user);
         localStorage.setItem("authToken", token); // Store the token
-        history.push("/campaigns"); // Add this line to redirect
+
+        // Redirect to home page
+        window.location.href = "/campaigns";
       } else {
         const { error } = await response.json();
         setError(error);

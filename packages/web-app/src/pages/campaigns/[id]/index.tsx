@@ -10,8 +10,9 @@ import {
   Button,
   HStack,
 } from "@chakra-ui/react";
+import ViewTemplate from "@/components/ViewTemplate";
 
-const GET_CAMPAIGN = gql`
+export const GET_CAMPAIGN = gql`
   query GetCampaign($id: ID!) {
     campaign(id: $id) {
       id
@@ -23,7 +24,14 @@ const GET_CAMPAIGN = gql`
       created_at
       updated_at
     }
+    emailTemplateByCampaignId(campaignId: $id) {
+      id
+      name
+      subject
+      text_content
+      html_content
   }
+}
 `;
 
 const Campaign = () => {
@@ -32,7 +40,6 @@ const Campaign = () => {
 
   const { loading, error, data } = useQuery(GET_CAMPAIGN, {
     variables: { id },
-    skip: !id,
   });
 
   if (loading) return <p>Loading...</p>;
@@ -45,14 +52,22 @@ const Campaign = () => {
   return (
     <Container maxW="container.xl" py={12}>
       {campaign ? (
-        <VStack spacing={6} align="start">
+        <VStack spacing={6} align="center">
           <Heading as="h1" size="md">
             {campaign.name}
           </Heading>
-          <Text>Reply To: {campaign.reply_to_email_address}</Text>
-          <Text>Daily Limit: {campaign.daily_limit}</Text>
-          <Text>Emails Sent Today: {campaign.emails_sent_today}</Text>
-          <Text>Status: {campaign.status}</Text>
+          <VStack spacing={4} align="center">
+            <HStack spacing={8}>
+              <Text>Daily Limit: {campaign.daily_limit}</Text>
+
+              <Text>Emails Sent Today: {campaign.emails_sent_today}</Text>
+              <Text>Status: {campaign.status}</Text>
+
+            </HStack>
+            <Text>Reply To: {campaign.reply_to_email_address}</Text>
+
+          </VStack>
+
           <HStack spacing={4}>
             <Link href={`/campaigns/${id}/edit`} passHref>
               <Button as="a" colorScheme="blue">
@@ -70,6 +85,16 @@ const Campaign = () => {
               </Button>
             </Link>
           </HStack>
+
+          {data.emailTemplateByCampaignId && (
+            <>
+              <Text fontWeight={800}>EMAIL TEMPLATE</Text>
+              <ViewTemplate template={data.emailTemplateByCampaignId} />
+            </>
+
+          )}
+
+
         </VStack>
       ) : (
         <Text>No campaign found.</Text>

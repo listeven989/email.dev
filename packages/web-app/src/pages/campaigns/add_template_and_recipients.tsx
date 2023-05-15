@@ -20,8 +20,10 @@ import Papa from "papaparse";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faRecycle } from "@fortawesome/free-solid-svg-icons";
 import { useState, useRef } from "react";
+import CreateTemplateDropdown from "@/components/campaigns/create-template-dropdown";
+import ViewTemplate from "@/components/ViewTemplate";
 
-const GET_EMAIL_TEMPLATES = gql`
+export const GET_EMAIL_TEMPLATES = gql`
   query GetEmailTemplates {
     emailTemplates {
       id
@@ -51,24 +53,6 @@ const ADD_TEMPLATE_AND_RECIPIENTS = gql`
   }
 `;
 
-const CREATE_EMAIL_TEMPLATE = gql`
-  mutation CreateEmailTemplate(
-    $name: String!
-    $subject: String!
-    $textContent: String!
-    $htmlContent: String!
-  ) {
-    createEmailTemplate(
-      name: $name
-      subject: $subject
-      textContent: $textContent
-      htmlContent: $htmlContent
-    ) {
-      id
-      name
-    }
-  }
-`;
 
 const AddTemplateAndRecipients = () => {
   const router = useRouter();
@@ -83,29 +67,8 @@ const AddTemplateAndRecipients = () => {
   const [fileName, setFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showNewTemplateForm, setShowNewTemplateForm] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState("");
-  const [newTemplateSubject, setNewTemplateSubject] = useState("");
-  const [newTextContent, setNewTextContent] = useState("");
-  const [newHtmlContent, setNewHtmlContent] = useState("");
-  const [createEmailTemplate] = useMutation(CREATE_EMAIL_TEMPLATE, {
-    refetchQueries: [{ query: GET_EMAIL_TEMPLATES }],
-  });
 
-  const handleCreateNewTemplate = async () => {
-    await createEmailTemplate({
-      variables: {
-        name: newTemplateName,
-        subject: newTemplateSubject,
-        textContent: newTextContent,
-        htmlContent: newHtmlContent,
-      },
-    });
-    setShowNewTemplateForm(false);
-    setNewTemplateName("");
-    setNewTemplateSubject("");
-    setNewTextContent("");
-    setNewHtmlContent("");
-  };
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -170,83 +133,15 @@ const AddTemplateAndRecipients = () => {
             ))}
             <option value="create_new">Create New Email Template</option>
           </Select>
-          <Collapse in={showNewTemplateForm} animateOpacity>
-            <VStack mt={4} spacing={4}>
-              <FormControl id="newTemplateName">
-                <FormLabel>New Template Name</FormLabel>
-                <Input
-                  value={newTemplateName}
-                  onChange={(e) => setNewTemplateName(e.target.value)}
-                />
-              </FormControl>
-              <FormControl id="newTemplateSubject">
-                <FormLabel>New Template Subject</FormLabel>
-                <Input
-                  value={newTemplateSubject}
-                  onChange={(e) => setNewTemplateSubject(e.target.value)}
-                />
-              </FormControl>
-              <FormControl id="newTextContent">
-                <FormLabel>New Text Content</FormLabel>
-                <Textarea
-                  value={newTextContent}
-                  onChange={(e) => setNewTextContent(e.target.value)}
-                />
-              </FormControl>
-              <FormControl id="newHtmlContent">
-                <FormLabel>New HTML Content</FormLabel>
-                <Textarea
-                  value={newHtmlContent}
-                  onChange={(e) => setNewHtmlContent(e.target.value)}
-                />
-              </FormControl>
-              <Button onClick={handleCreateNewTemplate}>
-                Save New Template
-              </Button>
-            </VStack>
-          </Collapse>
+
+          <CreateTemplateDropdown
+            setShow={setShowNewTemplateForm}
+            show={showNewTemplateForm} />
+
           {selectedTemplate && (
-            <Box mt={4}>
-              <FormLabel>Subject</FormLabel>
-              <Input disabled value={selectedTemplate.subject} readOnly />
-              <FormLabel mt={4}>Text Content</FormLabel>
-              <Textarea
-                disabled
-                value={selectedTemplate.text_content}
-                readOnly
-              />
-              <FormLabel mt={4}>HTML Content</FormLabel>
-              <Textarea value={selectedTemplate.html_content} readOnly />
-              {/* TODO: preview not actually displaying correctly */}
-              {/* <Button
-                mt={4}
-                onClick={() => {
-                  onPreviewDialogOpen();
-                  setPreviewType("desktop");
-                }}
-              >
-                Preview on Desktop
-              </Button>
-              <Button
-                mt={4}
-                ml={4}
-                onClick={() => {
-                  onPreviewDialogOpen();
-                  setPreviewType("mobile");
-                }}
-              >
-                Preview on Mobile
-              </Button> */}
-              <Button
-                mt={4}
-                onClick={() => {
-                  window.open("/email-templates/test", "_blank");
-                }}
-              >
-                Send Test Email
-              </Button>
-            </Box>
+          <ViewTemplate template={selectedTemplate} />
           )}
+          
         </FormControl>
         <FormControl id="emailAddresses">
           <FormLabel>Email Recipients</FormLabel>

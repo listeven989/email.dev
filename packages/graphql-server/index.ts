@@ -89,6 +89,9 @@ const typeDefs = gql`
     campaigns: [Campaign]
     campaign(id: ID!): Campaign
     recipientEmails: [RecipientEmail]
+    emailTemplateByCampaignId(campaignId: ID!): EmailTemplate
+    emailTemplate(id: ID!): EmailTemplate
+
   }
 
   type Mutation {
@@ -107,6 +110,7 @@ const typeDefs = gql`
     ): EmailAccount
 
     updateCampaignStatus(id: ID!, status: String!): Campaign
+    updateCampaignTemplate(id: ID!, email_template_id: ID!): Campaign
 
     createEmailTemplate(
       name: String!
@@ -115,7 +119,26 @@ const typeDefs = gql`
       html_content: String
     ): EmailTemplate
 
+    editEmailTemplate(
+      id: ID!
+      name: String!
+      subject: String!
+      text_content: String
+      html_content: String
+    ): EmailTemplate
+
     createCampaign(
+      email_account_id: ID!
+      email_template_id: ID
+      name: String!
+      reply_to_email_address: String
+      daily_limit: Int
+      emails_sent_today: Int
+      status: String
+    ): Campaign
+
+    editCampaign(
+      id: ID!
       email_account_id: ID!
       email_template_id: ID
       name: String!
@@ -148,6 +171,7 @@ const resolvers = {
       );
       return result.rows;
     },
+
     campaigns: async (_: any, __: any, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query(
@@ -159,6 +183,27 @@ const resolvers = {
     campaign: async (_, { id }, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query("SELECT * FROM campaigns WHERE id = $1", [
+        id,
+      ]);
+      return result.rows[0];
+    },
+    emailTemplateByCampaignId: async (_: any, { campaignId }: any, context: { user: any }) => {
+      checkAuth(context);
+      const campaignResult = await pool.query("SELECT email_template_id FROM campaigns WHERE id = $1", [
+        campaignId,
+      ]);
+
+      const templateId = campaignResult.rows[0].email_template_id;
+
+      console.log({})
+      const result = await pool.query("SELECT * FROM email_templates WHERE id = $1", [
+        templateId,
+      ]);
+      return result.rows[0];
+    },
+    emailTemplate: async (_: any, { id }: any, context: { user: any }) => {
+      checkAuth(context);
+      const result = await pool.query("SELECT * FROM email_templates WHERE id = $1", [
         id,
       ]);
       return result.rows[0];
@@ -271,6 +316,55 @@ const resolvers = {
       );
       return result.rows[0];
     },
+    editEmailTemplate: async (
+      _: any,
+      { id, name, subject, text_content, html_content }: any,
+      context: { user: any }
+    ) => {
+      checkAuth(context);
+      const result = await pool.query(
+        "UPDATE email_templates SET user_id = $1, name= $2, subject= $3, text_content= $4, html_content= $5 WHERE id=$6 RETURNING *",
+        [context.user.id, name, subject, text_content, html_content, id]
+      );
+      return result.rows[0];
+    },
+    editCampaign: async (
+      _: any,
+      {
+        id,
+        email_account_id,
+        email_template_id = null,
+        name,
+        reply_to_email_address,
+        daily_limit = 50,
+        emails_sent_today = 0,
+        status = "paused",
+      }: any,
+      context: { user: any }
+    ) => {
+      checkAuth(context);
+
+      // if daily limit is 0, set it to 50
+      if (daily_limit === 0) {
+        daily_limit = 50;
+      }
+
+      const result = await pool.query(
+        "UPDATE campaigns SET user_id = $1, email_account_id= $2, email_template_id= $3, name= $4, reply_to_email_address= $5, daily_limit= $6, emails_sent_today= $7, status= $8 WHERE id = $9 RETURNING *",
+        [
+          context.user.id,
+          email_account_id,
+          email_template_id,
+          name,
+          reply_to_email_address,
+          daily_limit,
+          emails_sent_today,
+          status,
+          id
+        ]
+      );
+      return result.rows[0];
+    },
     createCampaign: async (
       _: any,
       {
@@ -290,7 +384,7 @@ const resolvers = {
       if (daily_limit === 0) {
         daily_limit = 50;
       }
-  
+
       const result = await pool.query(
         "INSERT INTO campaigns (user_id, email_account_id, email_template_id, name, reply_to_email_address, daily_limit, emails_sent_today, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
         [
@@ -320,6 +414,13 @@ const resolvers = {
       const result = await pool.query(
         "UPDATE campaigns SET status = $1 WHERE id = $2 RETURNING *",
         [status, id]
+      );
+      return result.rows[0];
+    },
+    updateCampaignTemplate: async (_: any, { id, email_template_id }: any) => {
+      const result = await pool.query(
+        "UPDATE campaigns SET email_template_id = $1 WHERE id = $2 RETURNING *",
+        [email_template_id, id]
       );
       return result.rows[0];
     },

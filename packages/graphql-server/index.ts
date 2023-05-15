@@ -331,18 +331,17 @@ const resolvers = {
       context: { user: any }
     ) => {
       checkAuth(context);
-      const addedEmails: String[] = []
-
-      await Promise.all(
-        email_addresses.map(async (email_address: string) => {
-          const result = await pool.query(
-            "INSERT INTO recipient_emails (campaign_id, email_address) VALUES ($1, $2) RETURNING *",
-            [campaign_id, email_address]
-          );
-          addedEmails.push(result.rows[0])
-        })
-      )
-      return addedEmails
+      const addedEmails: String[] = [];
+      for (const email_address of email_addresses) {
+        console.log("adding ", email_address);
+        const result = await pool.query(
+          "INSERT INTO recipient_emails (campaign_id, email_address) VALUES ($1, $2) RETURNING *",
+          [campaign_id, email_address]
+        );
+        addedEmails.push(result.rows[0]);
+      }
+    
+      return addedEmails;
     },
 
     editEmailTemplate: async (

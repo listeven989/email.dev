@@ -1,6 +1,7 @@
 import { ApolloServer, gql } from "apollo-server";
-import { Client, Pool } from "pg";
+import { Pool } from "pg";
 import { createTransport } from "nodemailer"; // Add this line
+const jwt = require('jsonwebtoken');
 
 // dotenv
 require("dotenv").config();
@@ -280,12 +281,27 @@ const server = new ApolloServer({
   resolvers,
   context: async ({ req }) => {
     await logRequest(req);
-    return {};
+
+    const token = req.headers.authorization || '';
+    const secret = 'your-secret-key';
+
+    try {
+      if (token) {
+        const decodedToken = jwt.verify(token.replace('Bearer ', ''), secret);
+        const user = decodedToken; // Add user data to the context
+        return { user, pool };
+      }
+    } catch (error: any) {
+      console.error('Error verifying token:', error.message);
+    }
+
+    return { pool };
   },
   formatResponse: (response) => {
     return logResponse(response);
   },
 });
+
 
 server.listen({ port: 8300 }).then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);

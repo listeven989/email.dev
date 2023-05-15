@@ -88,8 +88,8 @@ const Navbar = () => {
           </HStack>
         </HStack>
         <Flex alignItems={"center"}>
-          <Link href={"#"} color={"blue.500"}>
-            Sign Out
+          <Link href={"/signup"} color={"blue.500"}>
+            Sign Up
           </Link>
         </Flex>
       </Flex>

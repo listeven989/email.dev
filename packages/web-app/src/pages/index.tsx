@@ -43,7 +43,7 @@ const Index = ({ }) => {
         <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
           {/* <h1 className="text-3xl font-bold mb-4">Next.js App</h1>
           <RoutesList routes={routes} /> */}
-          <h1 className="text-xl font-bold mb-4">Bringing you a great experience. Loading...</h1>
+          <h1 className="text-xl font-bold mb-4">Building you a great experience. Loading...</h1>
         </div>
       </div>
     </div>

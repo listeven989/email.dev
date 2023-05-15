@@ -49,6 +49,7 @@ function Signup() {
         const { user, token } = data.signup;
         console.log("User created successfully:", user);
         localStorage.setItem("authToken", token);
+        localStorage.setItem("userEmail", email);
 
         // Redirect to home page
         window.location.href = "/campaigns";

@@ -83,7 +83,6 @@ const typeDefs = gql`
     updated_at: String!
   }
 
-
   type Query {
     emailAccounts: [EmailAccount]
     emailTemplates: [EmailTemplate]
@@ -92,8 +91,6 @@ const typeDefs = gql`
     recipientEmails(campaignId: ID!): [RecipientEmail]
     emailTemplateByCampaignId(campaignId: ID!): EmailTemplate
     emailTemplate(id: ID!): EmailTemplate
-  
-
   }
 
   type Mutation {
@@ -105,7 +102,7 @@ const typeDefs = gql`
     addRecipientEmails(
       campaign_id: ID!
       email_addresses: [String!]!
-    ) : [RecipientEmail]
+    ): [RecipientEmail]
 
     createEmailAccount(
       email_address: String!
@@ -168,13 +165,17 @@ const resolvers = {
   Query: {
     emailAccounts: async (_: any, __: any, context: { user: any }) => {
       checkAuth(context);
-      const result = await pool.query("SELECT * FROM email_accounts WHERE user_id = $1", [context.user.id]);
+      const result = await pool.query(
+        "SELECT * FROM email_accounts WHERE user_id = $1",
+        [context.user.id]
+      );
       return result.rows;
     },
     emailTemplates: async (_: any, __: any, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query(
-        "SELECT * FROM email_templates WHERE user_id = $1 ORDER BY created_at DESC", [context.user.id]
+        "SELECT * FROM email_templates WHERE user_id = $1 ORDER BY created_at DESC",
+        [context.user.id]
       );
       return result.rows;
     },
@@ -182,7 +183,8 @@ const resolvers = {
     campaigns: async (_: any, __: any, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query(
-        "SELECT * FROM campaigns WHERE user_id = $1 ORDER BY created_at DESC", [context.user.id]
+        "SELECT * FROM campaigns WHERE user_id = $1 ORDER BY created_at DESC",
+        [context.user.id]
       );
       return result.rows;
     },
@@ -194,31 +196,45 @@ const resolvers = {
       ]);
       return result.rows[0];
     },
-    emailTemplateByCampaignId: async (_: any, { campaignId }: any, context: { user: any }) => {
+    emailTemplateByCampaignId: async (
+      _: any,
+      { campaignId }: any,
+      context: { user: any }
+    ) => {
       checkAuth(context);
-      const campaignResult = await pool.query("SELECT email_template_id FROM campaigns WHERE id = $1", [
-        campaignId,
-      ]);
+      const campaignResult = await pool.query(
+        "SELECT email_template_id FROM campaigns WHERE id = $1",
+        [campaignId]
+      );
 
       const templateId = campaignResult.rows[0].email_template_id;
 
-      console.log({})
-      const result = await pool.query("SELECT * FROM email_templates WHERE id = $1", [
-        templateId,
-      ]);
+      console.log({});
+      const result = await pool.query(
+        "SELECT * FROM email_templates WHERE id = $1",
+        [templateId]
+      );
       return result.rows[0];
     },
     emailTemplate: async (_: any, { id }: any, context: { user: any }) => {
       checkAuth(context);
-      const result = await pool.query("SELECT * FROM email_templates WHERE id = $1", [
-        id,
-      ]);
+      const result = await pool.query(
+        "SELECT * FROM email_templates WHERE id = $1",
+        [id]
+      );
       return result.rows[0];
     },
-    recipientEmails: async (_: any, { campaignId }: any, context: { user: any }) => {
+    recipientEmails: async (
+      _: any,
+      { campaignId }: any,
+      context: { user: any }
+    ) => {
       checkAuth(context);
 
-      const result = await pool.query("SELECT * FROM recipient_emails WHERE campaign_id = $1", [campaignId]);
+      const result = await pool.query(
+        "SELECT * FROM recipient_emails WHERE campaign_id = $1",
+        [campaignId]
+      );
       return result.rows;
     },
   },
@@ -231,15 +247,21 @@ const resolvers = {
       );
       const user = result.rows[0];
 
-      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string, {
-        expiresIn: "30d",
-      });
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET as string,
+        {
+          expiresIn: "30d",
+        }
+      );
 
       return { token, user };
     },
 
     login: async (_: any, { email, password }: any) => {
-      const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+      const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+        email,
+      ]);
       const user = result.rows[0];
 
       if (!user) {
@@ -252,9 +274,13 @@ const resolvers = {
         throw new Error("Invalid email or password");
       }
 
-      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string, {
-        expiresIn: "30d",
-      });
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET as string,
+        {
+          expiresIn: "30d",
+        }
+      );
 
       return { token, user };
     },
@@ -322,7 +348,15 @@ const resolvers = {
       checkAuth(context);
       const result = await pool.query(
         "INSERT INTO email_accounts (user_id, email_address, display_name, smtp_host, smtp_port, username, password) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-        [context.user.id, email_address, display_name, smtp_host, smtp_port, username, password]
+        [
+          context.user.id,
+          email_address,
+          display_name,
+          smtp_host,
+          smtp_port,
+          username,
+          password,
+        ]
       );
       return result.rows[0];
     },
@@ -344,19 +378,21 @@ const resolvers = {
       context: { user: any }
     ) => {
       checkAuth(context);
-      const addedEmails: String[] = [];
-      for (const email_address of email_addresses) {
-        console.log("adding ", email_address);
-        const result = await pool.query(
-          "INSERT INTO recipient_emails (campaign_id, email_address) VALUES ($1, $2) RETURNING *",
-          [campaign_id, email_address]
-        );
-        addedEmails.push(result.rows[0]);
-      }
-    
-      return addedEmails;
-    },
 
+      // Generate the bulk insert query and values
+      const query = `
+        INSERT INTO recipient_emails (campaign_id, email_address)
+        VALUES ${email_addresses.map((_: any, i: number) => `($1, $${i + 2})`).join(", ")}
+        RETURNING *;
+      `;
+      const values = [campaign_id, ...email_addresses];
+
+      // Execute the query
+      const result = await pool.query(query, values);
+
+      // Return the inserted rows
+      return result.rows;
+    },
     editEmailTemplate: async (
       _: any,
       { id, name, subject, text_content, html_content }: any,
@@ -401,7 +437,7 @@ const resolvers = {
           daily_limit,
           emails_sent_today,
           status,
-          id
+          id,
         ]
       );
       return result.rows[0];

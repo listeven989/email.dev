@@ -15,6 +15,8 @@ import {
   Th,
   Td,
   Flex,
+  Badge,
+  useColorModeValue,
 } from "@chakra-ui/react";
 
 const GET_CAMPAIGNS = gql`
@@ -60,6 +62,8 @@ const Campaigns = () => {
 
   const campaigns = data.campaigns;
 
+  const bg = useColorModeValue("gray.50", "gray.900");
+
   return (
     <Container maxW="container.xl" py={12}>
       <VStack spacing={6} align="start" w="100%">
@@ -83,11 +87,12 @@ const Campaigns = () => {
         </Flex>
         <Box w="100%">
           <Table
-            variant="striped"
+            variant="simple"
             colorScheme="gray"
             borderWidth="1px"
             borderRadius="md"
             overflow="hidden"
+            bg={bg}
           >
             <Thead bg="gray.500">
               <Tr>
@@ -119,6 +124,7 @@ const Campaigns = () => {
                       <Text
                         as="a"
                         color="blue.500"
+                        fontWeight="bold"
                         _hover={{ textDecoration: "underline" }}
                       >
                         {campaign.name}
@@ -128,21 +134,32 @@ const Campaigns = () => {
                   <Td>{campaign.reply_to_email_address}</Td>
                   <Td>{campaign.daily_limit}</Td>
                   <Td>{campaign.emails_sent_today}</Td>
-                  <Td>{campaign.status}</Td>
                   <Td>
-                  {campaign.status !== "completed" && (
-                        <Button
-                          size="xs"
-                          colorScheme={
-                            campaign.status === "active" ? "red" : "green"
-                          }
-                          onClick={() => toggleCampaignStatus(campaign)}
-                        >
-                          {campaign.status === "active"
-                            ? "Pause Campaign"
-                            : "Resume Campaign"}
-                        </Button>
-                      )}
+                    <Badge
+                      colorScheme={
+                        campaign.status === "active" ? "green" : "red"
+                      }
+                      borderRadius="md"
+                      px={2}
+                      py={1}
+                    >
+                      {campaign.status}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    {campaign.status !== "completed" && (
+                      <Button
+                        size="xs"
+                        colorScheme={
+                          campaign.status === "active" ? "red" : "green"
+                        }
+                        onClick={() => toggleCampaignStatus(campaign)}
+                      >
+                        {campaign.status === "active"
+                          ? "Pause Campaign"
+                          : "Resume Campaign"}
+                      </Button>
+                    )}
                   </Td>
                 </Tr>
               ))}

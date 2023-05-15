@@ -63,7 +63,8 @@ function Login() {
         const { user, token } = data.login;
         console.log("Logged in successfully:", user, token);
         localStorage.setItem("authToken", token);
-  
+        localStorage.setItem("userEmail", email);
+
         // Redirect to home page
         window.location.href = "/campaigns";
       }

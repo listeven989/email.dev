@@ -12,6 +12,8 @@ import {
   Box,
   Badge,
   Flex,
+  SimpleGrid,
+  Stack,
 } from "@chakra-ui/react";
 import ViewTemplate from "@/components/ViewTemplate";
 
@@ -56,44 +58,59 @@ const Campaign = () => {
     <Container maxW="container.md" py={12}>
       {campaign ? (
         <VStack spacing={6} align="left">
-        <Heading as="h1" size="lg">Campaign Details</Heading>
-        <Box>
-          <Text fontWeight="bold">Campaign Name:</Text>
-          <Text>{campaign.name}</Text>
-        </Box>
-          <Box>
-            <Text fontWeight="bold">Daily Limit:</Text>
-            <Text>{campaign.daily_limit}</Text>
+          <Heading as="h1" size="lg">Campaign Details</Heading>
+          <Box
+            borderWidth={1}
+            borderRadius="lg"
+            p={6}
+            boxShadow="md"
+            bg="white"
+            w="100%"
+          >
+            <SimpleGrid columns={2} spacing={10}>
+              <Box>
+                <Text fontWeight="bold">Campaign Name:</Text>
+                <Text>{campaign.name}</Text>
+              </Box>
+              <Box>
+                <Text fontWeight="bold">Daily Limit:</Text>
+                <Text>{campaign.daily_limit}</Text>
+              </Box>
+              <Box>
+                <Text fontWeight="bold">Emails Sent Today:</Text>
+                <Text>{campaign.emails_sent_today}</Text>
+              </Box>
+              <Box>
+                <Text fontWeight="bold">Status:</Text>
+                <Badge
+                  colorScheme={campaign.status === 'active' ? 'green' : 'red'}
+                >
+                  {campaign.status}
+                </Badge>
+              </Box>
+              <Box>
+                <Text fontWeight="bold">Reply To:</Text>
+                <Text>{campaign.reply_to_email_address || "n/a"}</Text>
+              </Box>
+            </SimpleGrid>
           </Box>
-          <Box>
-            <Text fontWeight="bold">Emails Sent Today:</Text>
-            <Text>{campaign.emails_sent_today}</Text>
-          </Box>
-          <Box>
-            <Text fontWeight="bold">Status:</Text>
-            <Badge colorScheme={campaign.status === 'active' ? 'green' : 'red'}>
-              {campaign.status}
-            </Badge>
-          </Box>
-          <Box>
-          <Text fontWeight="bold">Reply To:</Text>
-          <Text>{campaign.reply_to_email_address || "n/a"}</Text>
-        </Box>
-        <Link href={`/campaigns/${id}/edit`} passHref>
-            <Button as="a" colorScheme="blue">
-              Edit Campaign
-            </Button>
-          </Link>
-          <Link href={`/campaigns/${id}/email-template`} passHref>
-            <Button as="a" colorScheme="blue">
-              View / Change Email Template
-            </Button>
-          </Link>
-          <Link href={`/campaigns/${id}/recipients`} passHref>
-            <Button as="a" colorScheme="blue">
-              Manage Recipients
-            </Button>
-          </Link>
+          <Stack direction="row" spacing={4}>
+            <Link href={`/campaigns/${id}/edit`} passHref>
+              <Button as="a" colorScheme="blue" variant="outline">
+                Edit Campaign
+              </Button>
+            </Link>
+            <Link href={`/campaigns/${id}/email-template`} passHref>
+              <Button as="a" colorScheme="blue" variant="outline">
+                View / Change Email Template
+              </Button>
+            </Link>
+            <Link href={`/campaigns/${id}/recipients`} passHref>
+              <Button as="a" colorScheme="blue" variant="outline">
+                Manage Recipients
+              </Button>
+            </Link>
+          </Stack>
         </VStack>
       ) : (
         <Text>No campaign found.</Text>

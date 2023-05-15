@@ -83,14 +83,16 @@ const typeDefs = gql`
     updated_at: String!
   }
 
+
   type Query {
     emailAccounts: [EmailAccount]
     emailTemplates: [EmailTemplate]
     campaigns: [Campaign]
     campaign(id: ID!): Campaign
-    recipientEmails: [RecipientEmail]
+    recipientEmails(campaignId: ID!): [RecipientEmail]
     emailTemplateByCampaignId(campaignId: ID!): EmailTemplate
     emailTemplate(id: ID!): EmailTemplate
+  
 
   }
 
@@ -99,6 +101,11 @@ const typeDefs = gql`
     login(email: String!, password: String!): AuthPayload!
 
     sendTestEmail(emailTemplateId: ID!, recipientEmail: String!): String
+
+    addRecipientEmails(
+      campaign_id: ID!
+      email_addresses: [String!]!
+    ) : [RecipientEmail]
 
     createEmailAccount(
       email_address: String!
@@ -208,8 +215,10 @@ const resolvers = {
       ]);
       return result.rows[0];
     },
-    recipientEmails: async () => {
-      const result = await pool.query("SELECT * FROM recipient_emails");
+    recipientEmails: async (_: any, { campaignId }: any, context: { user: any }) => {
+      checkAuth(context);
+
+      const result = await pool.query("SELECT * FROM recipient_emails WHERE campaign_id = $1", [campaignId]);
       return result.rows;
     },
   },
@@ -316,6 +325,26 @@ const resolvers = {
       );
       return result.rows[0];
     },
+    addRecipientEmails: async (
+      _: any,
+      { campaign_id, email_addresses }: any,
+      context: { user: any }
+    ) => {
+      checkAuth(context);
+      const addedEmails: String[] = []
+
+      await Promise.all(
+        email_addresses.map(async (email_address: string) => {
+          const result = await pool.query(
+            "INSERT INTO recipient_emails (campaign_id, email_address) VALUES ($1, $2) RETURNING *",
+            [campaign_id, email_address]
+          );
+          addedEmails.push(result.rows[0])
+        })
+      )
+      return addedEmails
+    },
+
     editEmailTemplate: async (
       _: any,
       { id, name, subject, text_content, html_content }: any,

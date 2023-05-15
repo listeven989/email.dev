@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useMutation, useQuery, gql } from "@apollo/client";
 import {
@@ -12,64 +12,97 @@ import {
   Container,
   Select,
 } from "@chakra-ui/react";
+import { GET_EMAIL_ACCOUNTS } from "../new";
 
-export const GET_EMAIL_ACCOUNTS = gql`
-  query GetEmailAccounts {
-    emailAccounts {
-      id
-      email_address
-      smtp_host
-    }
-  }
-`;
 
-const CREATE_CAMPAIGN = gql`
-  mutation CreateCampaign(
+const EDIT_CAMPAIGN = gql`
+  mutation EditCampaign(
+    $id: ID!
     $email_account_id: ID!
     $name: String!
     $reply_to_email_address: String!
     $daily_limit: Int!
+    $status: String
   ) {
-    createCampaign(
+    editCampaign(
+      id: $id
       email_account_id: $email_account_id
       name: $name
       reply_to_email_address: $reply_to_email_address
       daily_limit: $daily_limit
+      status: $status
     ) {
       id
     }
   }
 `;
 
-const NewCampaign = () => {
+const GET_CAMPAIGN = gql`
+  query GetCampaign($id: ID!) {
+    campaign(id: $id) {
+      email_account_id
+      daily_limit
+      name
+      reply_to_email_address
+      status
+    }
+}
+`;
+
+const EditCampaign = () => {
+
+  const router = useRouter();
+
+  const { id: campaignId } = router.query;
+
   const [emailAccountId, setEmailAccountId] = useState("");
   const [name, setName] = useState("");
   const [replyToEmailAddress, setReplyToEmailAddress] = useState("");
   const [dailyLimit, setDailyLimit] = useState(0);
-  const [createCampaign] = useMutation(CREATE_CAMPAIGN);
+  const [status, setStatus] = useState("");
+
+  const [editCampaign, { loading: editLoading }] = useMutation(EDIT_CAMPAIGN);
   const { loading, error, data } = useQuery(GET_EMAIL_ACCOUNTS);
-  const router = useRouter();
+  const { loading: campaignLoading, error: campaignError, data: campaignData } = useQuery(GET_CAMPAIGN, {
+    variables: { id: campaignId },
+  });
+
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    const { data } = await createCampaign({
+    const { data } = await editCampaign({
       variables: {
+        id: campaignId,
         email_account_id: emailAccountId,
         name,
         reply_to_email_address: replyToEmailAddress,
         daily_limit: dailyLimit,
+        status
       },
     });
 
-    const campaignId = data.createCampaign.id;
-    router.push(
-      `/campaigns/add_template_and_recipients?campaignId=${campaignId}`
-    );
+    if (data) {
+      router.push(
+        `/campaigns/${campaignId}`
+      );
+    }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+
+  useEffect(() => {
+    if (campaignData) {
+      const campaign = campaignData.campaign;
+      setEmailAccountId(campaign.email_account_id);
+      setName(campaign.name);
+      setReplyToEmailAddress(campaign.reply_to_email_address);
+      setDailyLimit(campaign.daily_limit);
+      setStatus(campaign.status);
+    }
+  }, [campaignData]);
+
+  if (loading || campaignLoading) return <p>Loading...</p>;
+  if (error || campaignError) return <p>Error: {campaignError?.message || error?.message}</p>;
 
   const emailAccounts = data.emailAccounts;
   const selectedEmailAccount = emailAccounts.find(
@@ -144,9 +177,25 @@ const NewCampaign = () => {
                   placeholder="optional"
                 />
               </FormControl>
-              <Button type="submit" colorScheme="blue">
-                Create Campaign
-              </Button>
+
+              <FormControl id="dailyLimit">
+                <FormLabel>Status</FormLabel>
+                <Select
+                  value={status}
+                  onChange={(e) => {
+                    setStatus(e.target.value);
+                  }}
+                >
+                  <option>active</option>
+                  <option>paused</option>
+                </Select>
+              </FormControl>
+
+              {editLoading ? <p>Loading...</p> :
+                <Button type="submit" colorScheme="blue">
+                  Update Campaign
+                </Button>
+              }
             </VStack>
           </form>
         </Box>
@@ -155,4 +204,4 @@ const NewCampaign = () => {
   );
 };
 
-export default NewCampaign;
+export default EditCampaign;

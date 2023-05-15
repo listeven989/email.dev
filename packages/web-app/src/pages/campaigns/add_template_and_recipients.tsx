@@ -16,12 +16,12 @@ import {
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { useMutation, useQuery, gql } from "@apollo/client";
-import Papa from "papaparse";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faRecycle } from "@fortawesome/free-solid-svg-icons";
 import { useState, useRef } from "react";
+import CreateTemplateDropdown from "@/components/campaigns/create-template-dropdown";
+import ViewTemplate from "@/components/ViewTemplate";
+import EmailRecipientsInput from "@/components/campaigns/email-recipients-input";
 
-const GET_EMAIL_TEMPLATES = gql`
+export const GET_EMAIL_TEMPLATES = gql`
   query GetEmailTemplates {
     emailTemplates {
       id
@@ -39,7 +39,10 @@ const ADD_TEMPLATE_AND_RECIPIENTS = gql`
     $emailTemplateId: ID!
     $emailAddresses: [String!]!
   ) {
-    updateCampaign(id: $campaignId, email_template_id: $emailTemplateId) {
+    updateCampaignTemplate(
+      id: $campaignId
+      email_template_id: $emailTemplateId
+    ) {
       id
     }
     addRecipientEmails(
@@ -47,25 +50,6 @@ const ADD_TEMPLATE_AND_RECIPIENTS = gql`
       email_addresses: $emailAddresses
     ) {
       id
-    }
-  }
-`;
-
-const CREATE_EMAIL_TEMPLATE = gql`
-  mutation CreateEmailTemplate(
-    $name: String!
-    $subject: String!
-    $textContent: String!
-    $htmlContent: String!
-  ) {
-    createEmailTemplate(
-      name: $name
-      subject: $subject
-      textContent: $textContent
-      htmlContent: $htmlContent
-    ) {
-      id
-      name
     }
   }
 `;
@@ -78,52 +62,8 @@ const AddTemplateAndRecipients = () => {
 
   const [emailTemplateId, setEmailTemplateId] = useState("");
   const [emailAddresses, setEmailAddresses] = useState("");
-  const [inputType, setInputType] = useState("text");
-  const [parsedEmails, setParsedEmails] = useState<string[]>([]);
-  const [fileName, setFileName] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [showNewTemplateForm, setShowNewTemplateForm] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState("");
-  const [newTemplateSubject, setNewTemplateSubject] = useState("");
-  const [newTextContent, setNewTextContent] = useState("");
-  const [newHtmlContent, setNewHtmlContent] = useState("");
-  const [createEmailTemplate] = useMutation(CREATE_EMAIL_TEMPLATE, {
-    refetchQueries: [{ query: GET_EMAIL_TEMPLATES }],
-  });
-
-  const handleCreateNewTemplate = async () => {
-    await createEmailTemplate({
-      variables: {
-        name: newTemplateName,
-        subject: newTemplateSubject,
-        textContent: newTextContent,
-        htmlContent: newHtmlContent,
-      },
-    });
-    setShowNewTemplateForm(false);
-    setNewTemplateName("");
-    setNewTemplateSubject("");
-    setNewTextContent("");
-    setNewHtmlContent("");
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      Papa.parse(file, {
-        header: true,
-        complete: (results) => {
-          const emails = results.data.map((row: any) => row.Email);
-          setEmailAddresses(emails.join("\n"));
-          setParsedEmails(emails);
-        },
-        error: (error) => {
-          alert(`Error parsing CSV file: ${error.message}`);
-        },
-      });
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,142 +110,20 @@ const AddTemplateAndRecipients = () => {
             ))}
             <option value="create_new">Create New Email Template</option>
           </Select>
-          <Collapse in={showNewTemplateForm} animateOpacity>
-            <VStack mt={4} spacing={4}>
-              <FormControl id="newTemplateName">
-                <FormLabel>New Template Name</FormLabel>
-                <Input
-                  value={newTemplateName}
-                  onChange={(e) => setNewTemplateName(e.target.value)}
-                />
-              </FormControl>
-              <FormControl id="newTemplateSubject">
-                <FormLabel>New Template Subject</FormLabel>
-                <Input
-                  value={newTemplateSubject}
-                  onChange={(e) => setNewTemplateSubject(e.target.value)}
-                />
-              </FormControl>
-              <FormControl id="newTextContent">
-                <FormLabel>New Text Content</FormLabel>
-                <Textarea
-                  value={newTextContent}
-                  onChange={(e) => setNewTextContent(e.target.value)}
-                />
-              </FormControl>
-              <FormControl id="newHtmlContent">
-                <FormLabel>New HTML Content</FormLabel>
-                <Textarea
-                  value={newHtmlContent}
-                  onChange={(e) => setNewHtmlContent(e.target.value)}
-                />
-              </FormControl>
-              <Button onClick={handleCreateNewTemplate}>
-                Save New Template
-              </Button>
-            </VStack>
-          </Collapse>
-          {selectedTemplate && (
-            <Box mt={4}>
-              <FormLabel>Subject</FormLabel>
-              <Input disabled value={selectedTemplate.subject} readOnly />
-              <FormLabel mt={4}>Text Content</FormLabel>
-              <Textarea
-                disabled
-                value={selectedTemplate.text_content}
-                readOnly
-              />
-              <FormLabel mt={4}>HTML Content</FormLabel>
-              <Textarea value={selectedTemplate.html_content} readOnly />
-              {/* TODO: preview not actually displaying correctly */}
-              {/* <Button
-                mt={4}
-                onClick={() => {
-                  onPreviewDialogOpen();
-                  setPreviewType("desktop");
-                }}
-              >
-                Preview on Desktop
-              </Button>
-              <Button
-                mt={4}
-                ml={4}
-                onClick={() => {
-                  onPreviewDialogOpen();
-                  setPreviewType("mobile");
-                }}
-              >
-                Preview on Mobile
-              </Button> */}
-              <Button
-                mt={4}
-                onClick={() => {
-                  window.open("/email-templates/test", "_blank");
-                }}
-              >
-                Send Test Email
-              </Button>
-            </Box>
-          )}
+
+          <CreateTemplateDropdown
+            setShow={setShowNewTemplateForm}
+            show={showNewTemplateForm}
+          />
+
+          {selectedTemplate && <ViewTemplate template={selectedTemplate} />}
         </FormControl>
-        <FormControl id="emailAddresses">
-          <FormLabel>Email Recipients</FormLabel>
-          <RadioGroup
-            value={inputType}
-            onChange={(value) => setInputType(value as string)}
-          >
-            <Stack direction="row">
-              <Radio value="text">Text</Radio>
-              <Radio value="csv">CSV</Radio>
-            </Stack>
-          </RadioGroup>
-          {inputType === "text" ? (
-            <Textarea
-              style={{ marginTop: "1rem" }}
-              placeholder="Enter email addresses, one per line"
-              value={emailAddresses}
-              onChange={(e) => setEmailAddresses(e.target.value)}
-            />
-          ) : (
-            <>
-              <Input
-                type="file"
-                accept=".csv"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                display="none"
-              />
-              {fileName && (
-                <Text mt={2} fontSize="sm">
-                  File: {fileName}
-                </Text>
-              )}
-              {fileName && (
-                <Textarea
-                  mt={4}
-                  value={parsedEmails.join("\n")}
-                  readOnly
-                  maxHeight="200px"
-                  overflowY="scroll"
-                />
-              )}
-              <Button
-                style={{ marginTop: "1rem" }}
-                leftIcon={
-                  fileName ? (
-                    <FontAwesomeIcon icon={faRecycle} />
-                  ) : (
-                    <FontAwesomeIcon icon={faUpload} />
-                  )
-                }
-                // colorScheme="blue"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {fileName ? "Pick Another CSV" : "Upload CSV"}
-              </Button>
-            </>
-          )}
-        </FormControl>
+
+        <EmailRecipientsInput
+          setEmailAddresses={setEmailAddresses}
+          emailAddresses={emailAddresses}
+        />
+
         <Button type="submit" colorScheme="blue">
           Continue
         </Button>

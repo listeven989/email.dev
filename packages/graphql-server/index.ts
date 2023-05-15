@@ -1,7 +1,8 @@
 import { ApolloServer, gql } from "apollo-server";
 import { Pool } from "pg";
 import { createTransport } from "nodemailer"; // Add this line
-const jwt = require('jsonwebtoken');
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 // dotenv
 require("dotenv").config();
@@ -21,8 +22,22 @@ const pool = new Pool({
 pool.connect();
 
 const typeDefs = gql`
+  type User {
+    id: ID!
+    email: String!
+    password: String!
+    created_at: String!
+    updated_at: String!
+  }
+
+  type AuthPayload {
+    token: String!
+    user: User!
+  }
+
   type EmailAccount {
     id: ID!
+    user_id: ID!
     email_address: String!
     display_name: String
     smtp_host: String!
@@ -35,6 +50,7 @@ const typeDefs = gql`
 
   type EmailTemplate {
     id: ID!
+    user_id: ID!
     name: String!
     subject: String!
     text_content: String
@@ -45,6 +61,7 @@ const typeDefs = gql`
 
   type Campaign {
     id: ID!
+    user_id: ID!
     email_account_id: ID!
     email_template_id: ID
     name: String!
@@ -75,10 +92,10 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    sendTestEmail(
-      emailTemplateId: ID!
-      recipientEmail: String!
-    ): String
+    signUp(email: String!, password: String!): AuthPayload!
+    login(email: String!, password: String!): AuthPayload!
+
+    sendTestEmail(emailTemplateId: ID!, recipientEmail: String!): String
 
     createEmailAccount(
       email_address: String!
@@ -119,27 +136,31 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    emailAccounts: async (_: any, __: any, context: { user: any; }) => {
-      checkAuth(context)
-      const result = await pool.query("SELECT * FROM email_accounts");
+    emailAccounts: async (_: any, __: any, context: { user: any }) => {
+      checkAuth(context);
+      const result = await pool.query("SELECT * FROM email_accounts WHERE user_id = $1", [context.user.id]);
       return result.rows;
     },
-    emailTemplates: async (_: any, __: any, context: { user: any; }) => {
-      checkAuth(context)
-      const result = await pool.query("SELECT * FROM email_templates ORDER BY created_at DESC");
-      return result.rows;
-    },
-    campaigns: async (_: any, __: any, context: { user: any; }) => {
-      checkAuth(context)
+    emailTemplates: async (_: any, __: any, context: { user: any }) => {
+      checkAuth(context);
       const result = await pool.query(
-        "SELECT * FROM campaigns ORDER BY created_at DESC"
+        "SELECT * FROM email_templates WHERE user_id = $1 ORDER BY created_at DESC", [context.user.id]
+      );
+      return result.rows;
+    },
+    campaigns: async (_: any, __: any, context: { user: any }) => {
+      checkAuth(context);
+      const result = await pool.query(
+        "SELECT * FROM campaigns WHERE user_id = $1 ORDER BY created_at DESC", [context.user.id]
       );
       return result.rows;
     },
     // @ts-ignore
-    campaign: async (_, { id }, context: { user: any; }) => {
-      checkAuth(context)
-      const result = await pool.query('SELECT * FROM campaigns WHERE id = $1', [id]);
+    campaign: async (_, { id }, context: { user: any }) => {
+      checkAuth(context);
+      const result = await pool.query("SELECT * FROM campaigns WHERE id = $1", [
+        id,
+      ]);
       return result.rows[0];
     },
     recipientEmails: async () => {
@@ -148,8 +169,42 @@ const resolvers = {
     },
   },
   Mutation: {
-    // @ts-ignore
-    async sendTestEmail(_, { emailTemplateId, recipientEmail }) {
+    signUp: async (_: any, { email, password }: any) => {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const result = await pool.query(
+        "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
+        [email, hashedPassword]
+      );
+      const user = result.rows[0];
+
+      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string, {
+        expiresIn: "30d",
+      });
+
+      return { token, user };
+    },
+
+    login: async (_: any, { email, password }: any) => {
+      const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+      const user = result.rows[0];
+
+      if (!user) {
+        throw new Error("Invalid email or password");
+      }
+
+      const validPassword = await bcrypt.compare(password, user.password);
+
+      if (!validPassword) {
+        throw new Error("Invalid email or password");
+      }
+
+      const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string, {
+        expiresIn: "30d",
+      });
+
+      return { token, user };
+    },
+    async sendTestEmail(_: any, { emailTemplateId, recipientEmail }: any) {
       const result = await pool.query(
         "SELECT * FROM email_templates WHERE id = $1",
         [emailTemplateId]
@@ -194,21 +249,25 @@ const resolvers = {
         smtp_port,
         username,
         password,
-      }: any
+      }: any,
+      context: { user: any }
     ) => {
+      checkAuth(context);
       const result = await pool.query(
-        "INSERT INTO email_accounts (email_address, display_name, smtp_host, smtp_port, username, password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-        [email_address, display_name, smtp_host, smtp_port, username, password]
+        "INSERT INTO email_accounts (user_id, email_address, display_name, smtp_host, smtp_port, username, password) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+        [context.user.id, email_address, display_name, smtp_host, smtp_port, username, password]
       );
       return result.rows[0];
     },
     createEmailTemplate: async (
       _: any,
-      { name, subject, text_content, html_content }: any
+      { name, subject, text_content, html_content }: any,
+      context: { user: any }
     ) => {
+      checkAuth(context);
       const result = await pool.query(
-        "INSERT INTO email_templates (name, subject, text_content, html_content) VALUES ($1, $2, $3, $4) RETURNING *",
-        [name, subject, text_content, html_content]
+        "INSERT INTO email_templates (user_id, name, subject, text_content, html_content) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [context.user.id, name, subject, text_content, html_content]
       );
       return result.rows[0];
     },
@@ -222,16 +281,20 @@ const resolvers = {
         daily_limit = 50,
         emails_sent_today = 0,
         status = "paused",
-      }: any
+      }: any,
+      context: { user: any }
     ) => {
+      checkAuth(context);
+
       // if daily limit is 0, set it to 50
       if (daily_limit === 0) {
         daily_limit = 50;
       }
-
+  
       const result = await pool.query(
-        "INSERT INTO campaigns (email_account_id, email_template_id, name, reply_to_email_address, daily_limit, emails_sent_today, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+        "INSERT INTO campaigns (user_id, email_account_id, email_template_id, name, reply_to_email_address, daily_limit, emails_sent_today, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
         [
+          context.user.id,
           email_account_id,
           email_template_id,
           name,
@@ -280,9 +343,9 @@ const logResponse = (response: any) => {
   return response;
 };
 
-export function checkAuth(context: { user: any; }) {
+export function checkAuth(context: { user: any }) {
   if (!context.user) {
-    throw new Error('Authentication required');
+    throw new Error("Authentication required");
   }
 }
 
@@ -292,17 +355,22 @@ const server = new ApolloServer({
   context: async ({ req }) => {
     await logRequest(req);
 
-    const token = req.headers.authorization || '';
-    const secret = 'your-secret-key';
+    const token = req.headers.authorization || "";
+    const secret = process.env.JWT_SECRET;
+
+    // if secret is missing throw an error
+    if (!secret) {
+      throw new Error("Missing jwt secret environment variable");
+    }
 
     try {
       if (token) {
-        const decodedToken = jwt.verify(token.replace('Bearer ', ''), secret);
+        const decodedToken = jwt.verify(token.replace("Bearer ", ""), secret);
         const user = decodedToken; // Add user data to the context
         return { user, pool };
       }
     } catch (error: any) {
-      console.error('Error verifying token:', error.message);
+      console.error("Error verifying token:", error.message);
     }
 
     return { pool };
@@ -311,7 +379,6 @@ const server = new ApolloServer({
     return logResponse(response);
   },
 });
-
 
 server.listen({ port: 8300 }).then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);

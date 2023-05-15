@@ -31,8 +31,10 @@ function Signup() {
       });
 
       if (response.ok) {
-        const { user } = await response.json();
+        const { user, token } = await response.json(); // Add token to the response
         console.log("User created successfully:", user);
+        localStorage.setItem("authToken", token); // Store the token
+        history.push("/campaigns"); // Add this line to redirect
       } else {
         const { error } = await response.json();
         setError(error);
@@ -110,12 +112,12 @@ function Signup() {
               </Text>
             </Link>
           </Text>
-        </VStack>
         {error && (
           <Text color="red.500" textAlign="center" marginTop={4}>
             Error: {error}
           </Text>
         )}
+        </VStack>
       </Center>
     </Flex>
   );

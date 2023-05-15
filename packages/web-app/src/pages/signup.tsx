@@ -1,5 +1,5 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
-import { createUser } from '../auth/auth';
+import { createUser } from '@/lib/auth';
 
 function Signup() {
   const [email, setEmail] = useState('');

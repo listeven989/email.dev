@@ -1,5 +1,5 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
-import { login } from '../auth/auth';
+import { login } from '@/lib/auth';
 
 function Login() {
   const [email, setEmail] = useState('');

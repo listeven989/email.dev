@@ -8,6 +8,11 @@ const httpLink = createHttpLink({
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('authToken');
 
+  if (!token) {
+    // direct to login page
+    window.location.href = '/login';
+  }
+
   return {
     headers: {
       ...headers,

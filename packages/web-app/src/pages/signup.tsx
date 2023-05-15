@@ -1,4 +1,15 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import {
+    Box,
+    Button,
+    FormControl,
+    FormLabel,
+    Input,
+    VStack,
+    Text,
+    Flex,
+    Center,
+  } from '@chakra-ui/react';
+  import { useState, ChangeEvent, FormEvent } from 'react';
 
 function Signup() {
   const [email, setEmail] = useState('');
@@ -21,39 +32,58 @@ function Signup() {
         const { error } = await response.json();
         setError(error);
       }
-    } catch (error) {
+    } catch (error: any) {
       setError(error.message);
     }
   }
 
   return (
-    <div>
-      <h1>Signup</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email:
-          <input
-            type="email"
-            value={email}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-        <br />
-        <label>
-          Password:
-          <input
-            type="password"
-            value={password}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        <br />
-        <button type="submit">Signup</button>
-      </form>
-      {error && <p>Error: {error}</p>}
-    </div>
+    <Flex minHeight="100vh" alignItems="center" justifyContent="center">
+      <Center
+        as="form"
+        onSubmit={handleSubmit}
+        bg="white"
+        boxShadow="md"
+        borderRadius="md"
+        p={8}
+        width="100%"
+        maxWidth="400px"
+      >
+        <VStack spacing={4}>
+          <Text fontSize="2xl" fontWeight="bold">
+            Signup
+          </Text>
+          <FormControl id="email" isRequired>
+            <FormLabel>Email:</FormLabel>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+            />
+          </FormControl>
+          <FormControl id="password" isRequired>
+            <FormLabel>Password:</FormLabel>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value)
+              }
+            />
+          </FormControl>
+          <Button type="submit" colorScheme="blue">
+            Signup
+          </Button>
+        </VStack>
+        {error && (
+          <Text color="red.500" textAlign="center" marginTop={4}>
+            Error: {error}
+          </Text>
+        )}
+      </Center>
+    </Flex>
   );
 }
 

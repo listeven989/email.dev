@@ -119,22 +119,26 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    emailAccounts: async () => {
+    emailAccounts: async (_: any, __: any, context: { user: any; }) => {
+      checkAuth(context)
       const result = await pool.query("SELECT * FROM email_accounts");
       return result.rows;
     },
-    emailTemplates: async () => {
+    emailTemplates: async (_: any, __: any, context: { user: any; }) => {
+      checkAuth(context)
       const result = await pool.query("SELECT * FROM email_templates ORDER BY created_at DESC");
       return result.rows;
     },
-    campaigns: async () => {
+    campaigns: async (_: any, __: any, context: { user: any; }) => {
+      checkAuth(context)
       const result = await pool.query(
         "SELECT * FROM campaigns ORDER BY created_at DESC"
       );
       return result.rows;
     },
     // @ts-ignore
-    campaign: async (_, { id }) => {
+    campaign: async (_, { id }, context: { user: any; }) => {
+      checkAuth(context)
       const result = await pool.query('SELECT * FROM campaigns WHERE id = $1', [id]);
       return result.rows[0];
     },
@@ -275,6 +279,12 @@ const logResponse = (response: any) => {
   }
   return response;
 };
+
+export function checkAuth(context: { user: any; }) {
+  if (!context.user) {
+    throw new Error('Authentication required');
+  }
+}
 
 const server = new ApolloServer({
   typeDefs,

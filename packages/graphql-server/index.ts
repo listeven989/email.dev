@@ -95,7 +95,7 @@ const typeDefs = gql`
     signUp(email: String!, password: String!): AuthPayload!
     login(email: String!, password: String!): AuthPayload!
 
-    sendTestEmail(emailTemplateId: ID!, recipientEmail: String!): String
+    sendTestEmail(emailTemplateId: ID!, recipientEmail: String!,emailAccountId: ID, campaignId: ID ): String
 
     createEmailAccount(
       email_address: String!
@@ -204,7 +204,8 @@ const resolvers = {
 
       return { token, user };
     },
-    async sendTestEmail(_: any, { emailTemplateId, recipientEmail }: any) {
+    async sendTestEmail(_: any, { emailTemplateId, recipientEmail, campaignId, emailAccountId }: any) {
+      // query the email template
       const result = await pool.query(
         "SELECT * FROM email_templates WHERE id = $1",
         [emailTemplateId]
@@ -215,18 +216,30 @@ const resolvers = {
         throw new Error("Email template not found");
       }
 
+      // query the email account
+      const emailAccountResult = await pool.query(
+        "SELECT email_address, smtp_host, username, password, smtp_port  FROM email_accounts WHERE id = $1",
+        [emailAccountId]
+      );
+      const emailAccount = emailAccountResult.rows[0];
+
+      if (!emailAccount) {
+        throw new Error("Email account not found");
+      }
+
+
       const transporter = createTransport({
-        host: "your_email_host",
-        port: 587,
+        host: emailAccount.smtp_host,
+        port: emailAccount.smtp_port,
         secure: false,
         auth: {
-          user: "your_email_username",
-          pass: "your_email_password",
+          user: emailAccount.username,
+          pass: emailAccount.password,
         },
       });
 
       const mailOptions = {
-        from: "your_email_address",
+        from: emailAccount.email_address,
         to: recipientEmail,
         subject: emailTemplate.subject,
         text: emailTemplate.text_content,
@@ -290,7 +303,7 @@ const resolvers = {
       if (daily_limit === 0) {
         daily_limit = 50;
       }
-  
+
       const result = await pool.query(
         "INSERT INTO campaigns (user_id, email_account_id, email_template_id, name, reply_to_email_address, daily_limit, emails_sent_today, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
         [

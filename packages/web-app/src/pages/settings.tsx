@@ -7,8 +7,18 @@ import {
   VStack,
   Text,
 } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 
 function Settings() {
+  const [storedValue, setStoredValue] = useState("");
+  const isClient = typeof window !== "undefined";
+
+  useEffect(() => {
+    if (isClient) {
+      const value = localStorage.getItem("someKey");
+      setStoredValue(value || "");
+    }
+  }, [isClient]);
   return (
     <Flex
       minHeight="calc(100vh - 60px)"
@@ -32,7 +42,7 @@ function Settings() {
             <FormLabel>Email:</FormLabel>
             <Input
               type="email"
-              value={localStorage.getItem("userEmail") || ""}
+              value={storedValue}
             />
           </FormControl>
           <FormControl id="userId" isDisabled>

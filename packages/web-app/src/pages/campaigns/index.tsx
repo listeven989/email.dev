@@ -55,14 +55,14 @@ const Campaigns = () => {
     });
   };
 
+  const bg = useColorModeValue("gray.50", "gray.900");
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
   if (!data) return null;
 
   const campaigns = data.campaigns;
-
-  const bg = useColorModeValue("gray.50", "gray.900");
 
   return (
     <Container maxW="container.xl" py={12}>

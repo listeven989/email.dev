@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
+import AuthLink from "./AuthLink";
 
 const Links = [
   //   { name: "Dashboard", href: "/dashboard" },
@@ -88,9 +89,7 @@ const Navbar = () => {
           </HStack>
         </HStack>
         <Flex alignItems={"center"}>
-          <Link href={"#"} color={"blue.500"}>
-            Sign Out
-          </Link>
+          <AuthLink />
         </Flex>
       </Flex>
 

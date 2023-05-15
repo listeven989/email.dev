@@ -16,14 +16,14 @@ import {
     mutation CreateEmailTemplate(
       $name: String!
       $subject: String!
-      $textContent: String!
-      $htmlContent: String!
+      $text_content: String!
+      $html_content: String!
     ) {
       createEmailTemplate(
         name: $name
         subject: $subject
-        textContent: $textContent
-        htmlContent: $htmlContent
+        text_content: $text_content
+        html_content: $html_content
       ) {
         id
         name
@@ -45,8 +45,8 @@ import {
           variables: {
             name: newTemplateName,
             subject: newTemplateSubject,
-            textContent: newTemplateTextContent,
-            htmlContent: newTemplateHtmlContent,
+            text_content: newTemplateTextContent,
+            html_content: newTemplateHtmlContent,
           },
         });
         toast({
@@ -55,6 +55,9 @@ import {
           duration: 3000,
           isClosable: true,
         });
+
+        // redirect to email templates
+        window.location.href = "/email-templates";
       } catch (error: any) {
         toast({
           title: "Error creating email template.",

@@ -1,2 +1,3 @@
 node_modules
 packages/graphql-server/.env
+packages/web-app/.env

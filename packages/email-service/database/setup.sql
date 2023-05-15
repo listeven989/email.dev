@@ -124,3 +124,39 @@ BEGIN
     DROP COLUMN subject;
   END IF;
 END $$;
+
+-- Create the users table
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Add user_id column to email_accounts table
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_accounts' AND column_name = 'user_id') THEN
+    ALTER TABLE email_accounts
+    ADD COLUMN user_id UUID REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
+-- Add user_id column to email_templates table
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_templates' AND column_name = 'user_id') THEN
+    ALTER TABLE email_templates
+    ADD COLUMN user_id UUID REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
+-- Add user_id column to campaigns table
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'user_id') THEN
+    ALTER TABLE campaigns
+    ADD COLUMN user_id UUID REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+END $$;

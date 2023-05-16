@@ -433,8 +433,7 @@ const resolvers = {
         LEFT JOIN recipient_emails re ON re.email_address = t.email
         WHERE re.email_address IS NULL
         RETURNING *;
-        
-  `;
+        `;
         values = [campaign_id, email_addresses];
       } else {
         // Generate the bulk insert query and values
@@ -445,7 +444,7 @@ const resolvers = {
           .join(", ")}
         ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
         RETURNING *;
-      `;
+        `;
 
         values = [campaign_id, ...email_addresses];
       }

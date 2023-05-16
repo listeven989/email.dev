@@ -425,7 +425,7 @@ const resolvers = {
       let query;
       let values;
       if (!allowMultiCampaignRecipients) {
-        // If setting is on, don't insert email addresses that already exist
+        // If setting is off, don't insert email addresses that already exist
         query = `
         INSERT INTO recipient_emails (campaign_id, email_address)
         SELECT $1, email

@@ -66,3 +66,15 @@ list_files "-" "."
 2. email-service is deployed on render.com as a background worker type
 3. graphql-server is deployed on render.com as a web service type
 
+## Packages
+
+email-service
+- runs all the crons and background workers to ensure all the emails are sent out in a timely manner
+- also contains the database migrations (setup.sql)
+
+web-app
+- web app for this tool you use this to create the campaigns, manage them etc
+
+graphql-server
+- backend for the web-app, creates campaigns, adds emails, etc
+

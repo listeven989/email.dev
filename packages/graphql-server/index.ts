@@ -425,6 +425,7 @@ const resolvers = {
         VALUES ${email_addresses
           .map((_: any, i: number) => `($1, $${i + 2})`)
           .join(", ")}
+        ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
         RETURNING *;
       `;
       const values = [campaign_id, ...email_addresses];

@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import { Client } from "pg";
 import { createTransport } from "nodemailer";
 import * as cron from "node-cron";
+import * as cheerio from 'cheerio';
 
 dotenv.config();
 
@@ -53,7 +54,7 @@ async function sendCampaignEmails() {
 
       // Get recipient emails for the current campaign (with emails_sent_today < emailsToSend)
       const recipientsQuery = `
-          SELECT recipient_emails.email_address
+          SELECT recipient_emails.id, recipient_emails.email_address
           FROM recipient_emails
           JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
           WHERE recipient_emails.campaign_id = $1 AND campaigns.emails_sent_today < $2 AND recipient_emails.sent = false
@@ -83,15 +84,29 @@ async function sendCampaignEmails() {
           subject: campaign.subject,
         };
 
+        const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/track-email-open/:${recipient.id}" style="display:none;" />`
+
+        // add the tracking pickel link into the html content
+        const $ = cheerio.load(campaign.html_content);
+
+        let htmlContent = campaign.html_content;
+if ($('body').length > 0) {
+  $('body').append(trackingPixelLink);
+  htmlContent = $.html();
+} else {
+  htmlContent.append(trackingPixelLink);
+}
         if (campaign.html_content && campaign.text_content) {
-          sendMailOpts["html"] = campaign.html_content;
-          sendMailOpts["text"] = campaign.text_content;
+          sendMailOpts["html"] = htmlContent;
+          sendMailOpts["text"] = campaign.text_content ;
         } else if (campaign.html_content) {
-          sendMailOpts["html"] = campaign.html_content;
+          sendMailOpts["html"] =htmlContent;
         } else {
-          sendMailOpts["text"] = campaign.text_content;
+          sendMailOpts["text"] = campaign.text_content ;
         }
 
+        console.log({htmlContent})
+        
         await transporter.sendMail(sendMailOpts);
 
         // Update the emails_sent_today for the current campaign in the database
@@ -160,6 +175,7 @@ cron.schedule("* * * * *", () => {
       console.error("Error in email sender cron job:", error);
     });
 });
+
 
 // Optionally, you can uncomment the following line to immediately send emails when the script starts:
 // sendCampaignEmails();

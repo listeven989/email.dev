@@ -433,21 +433,25 @@ const resolvers = {
         LEFT JOIN recipient_emails re ON re.email_address = t.email
         WHERE re.email_address IS NULL
         RETURNING *;
-        `;
+        
+  `;
         values = [campaign_id, email_addresses];
+
       } else {
+
         // Generate the bulk insert query and values
         query = `
         INSERT INTO recipient_emails (campaign_id, email_address)
         VALUES ${email_addresses
-          .map((_: any, i: number) => `($1, $${i + 2})`)
-          .join(", ")}
+            .map((_: any, i: number) => `($1, $${i + 2})`)
+            .join(", ")}
         ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
         RETURNING *;
-        `;
-
+      `;
         values = [campaign_id, ...email_addresses];
+
       }
+
 
       // Execute the query
       const result = await pool.query(query, values);

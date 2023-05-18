@@ -25,7 +25,7 @@
     "typescript": "^5.0.4"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.0",
+    "@/bcrypt": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/nodemailer": "^6.4.7",
     "nodemon": "^2.0.22",

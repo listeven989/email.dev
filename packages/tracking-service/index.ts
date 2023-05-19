@@ -55,3 +55,22 @@ app.get("/track-email-open/:recipientEmailId", async (req, res) => {
   // Serve the tracking pixel
   res.sendFile(path.join(__dirname, "pixel.png"));
 });
+
+app.get("/link/:linkId", async (req, res) => {
+  let linkId = req.params.linkId;
+  linkId = linkId.replace(":", "");
+
+  // Get the original URL from the database
+  const query = `
+    UPDATE link_clicks SET click_count = click_count + 1 WHERE id = $1 RETURNING url;
+  `;
+
+  try {
+    const result = await pool.query(query, [linkId]);
+    const url = result.rows[0].url;
+    res.redirect(url);
+  } catch (error) {
+    res.sendStatus(404);
+    console.error("Error redirecting url status:", error);
+  }
+});

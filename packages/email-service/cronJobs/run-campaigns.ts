@@ -86,16 +86,35 @@ async function sendCampaignEmails() {
 
         const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/track-email-open/:${recipient.id}" style="display:none;" />`;
 
-        // add the tracking pickel link into the html content
         const $ = cheerio.load(campaign.html_content);
 
+        // replace all links in the html content with tracking links
+        const links = $('a');
+
+        for (let i = 0; i < links.length; i++) {
+          const link = links[i];
+          const originalUrl = $(link).attr('href');
+
+          const query = `INSERT INTO link_clicks (url, recipient_email_id) VALUES ($1, $2) RETURNING id`;
+          const result = await client.query(query, [originalUrl, recipient.id]);
+          const linkClickId = result.rows[0].id;
+
+          $(link).attr('href', `${process.env.TRACKING_SERVICE_URL}/link/:${linkClickId}`);
+        }
+
+
+        // add the tracking pixel link into the html content
         let htmlContent = campaign.html_content;
         if ($("body").length > 0) {
           $("body").append(trackingPixelLink);
           htmlContent = $.html();
         } else {
+          htmlContent = $.html();
           htmlContent.append(trackingPixelLink);
         }
+
+        // console.log({ htmlContent });
+
         if (campaign.html_content && campaign.text_content) {
           sendMailOpts["html"] = htmlContent;
           sendMailOpts["text"] = campaign.text_content;

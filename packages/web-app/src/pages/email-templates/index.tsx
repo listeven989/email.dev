@@ -87,15 +87,15 @@ const EmailTemplates = () => {
               {emailTemplates.map((template: any) => (
                 <Tr key={template.id}>
                   <Td>
-                    <Link href={`/email-templates/${template.id}`} passHref>
-                      <Text
-                        as="a"
-                        color="blue.500"
-                        _hover={{ textDecoration: "underline" }}
-                      >
-                        {template.name}
-                      </Text>
-                    </Link>
+                    {/* disable ability to further view/edit template, they should just make a new one */}
+                    {/* <Link href={`/email-templates/${template.id}`} passHref> */}
+                    <Text
+                      as="a"
+                      color="blue.500"
+                      _hover={{ textDecoration: "underline" }}
+                    >
+                      {template.name}
+                    </Text>
                   </Td>
                   <Td>{template.subject}</Td>
                   {/* <Td>{template.text_content}</Td> */}

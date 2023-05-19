@@ -88,20 +88,8 @@ import {
             emailAccountId: selectedEmailAccountId,
           },
         });
-        toast({
-          title: "Test email sent successfully.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
       } catch (error: any) {
-        toast({
-          title: "Error sending test email.",
-          description: error.message,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        window.alert("Test email failed. Message: " + error.message);
       }
     };
   

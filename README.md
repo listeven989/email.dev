@@ -22,10 +22,14 @@ See the Github `Issues` section for new features that are being added. Feel free
 ## Common commands
 
 ```bash
-# development / local
+# development / setup
+pnpm i
+
+# development / running local
 pnpm --filter email-service cron:all
 pnpm --filter web-app dev
 pnpm --filter graphql-server start
+pnpm --filter tracking-service start
 
 # new database migrations
 pnpm --filter email-service setup:db

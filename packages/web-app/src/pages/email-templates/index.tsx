@@ -75,9 +75,9 @@ const EmailTemplates = () => {
                 <Th color="white" fontWeight="bold">
                   Subject
                 </Th>
-                <Th color="white" fontWeight="bold">
+                {/* <Th color="white" fontWeight="bold">
                   Text Content
-                </Th>
+                </Th> */}
                 <Th color="white" fontWeight="bold">
                   HTML Content
                 </Th>
@@ -98,7 +98,7 @@ const EmailTemplates = () => {
                     </Link>
                   </Td>
                   <Td>{template.subject}</Td>
-                  <Td>{template.text_content}</Td>
+                  {/* <Td>{template.text_content}</Td> */}
                   <Td>
                     <Box
                       maxH="100px"

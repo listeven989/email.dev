@@ -88,14 +88,14 @@ import {
               placeholder="Enter the template subject"
             />
           </FormControl>
-          <FormControl id="newTemplateTextContent">
+          {/* <FormControl id="newTemplateTextContent">
             <FormLabel>Text Content</FormLabel>
             <Textarea
               value={newTemplateTextContent}
               onChange={(e) => setNewTemplateTextContent(e.target.value)}
               placeholder="Enter the template text content"
             />
-          </FormControl>
+          </FormControl> */}
           <FormControl id="newTemplateHtmlContent">
             <FormLabel>HTML Content</FormLabel>
             <Textarea

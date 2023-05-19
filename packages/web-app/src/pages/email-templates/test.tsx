@@ -155,8 +155,8 @@ import {
             <Box mt={4}>
               <Text fontWeight="bold">Subject:</Text>
               <Text>{selectedTemplate.subject}</Text>
-              <FormLabel mt={4}>Text Content</FormLabel>
-              <Textarea disabled value={selectedTemplate.text_content} readOnly />
+              {/* <FormLabel mt={4}>Text Content</FormLabel>
+              <Textarea disabled value={selectedTemplate.text_content} readOnly /> */}
               <FormLabel mt={4}>HTML Content</FormLabel>
               <Textarea value={selectedTemplate.html_content} readOnly />
             </Box>

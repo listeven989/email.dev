@@ -96,7 +96,7 @@ const CreateEmailTemplate = () => {
           />
         </FormControl>
         <FormControl id="newTemplateTextContent">
-          <FormLabel>Content</FormLabel>
+          <FormLabel>{contentFormat === "markdown" ? "Markdown" : "Html"} Content</FormLabel>
           {contentFormat === "markdown" ? (
             <Textarea
               value={newMarkdownContent}

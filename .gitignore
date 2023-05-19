@@ -1,5 +1,10 @@
+# npm
 node_modules
+
+# .env
 packages/graphql-server/.env
 packages/web-app/.env
 packages/tracking-service/.env
 
+# misc
+.DS_Store

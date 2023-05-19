@@ -65,10 +65,18 @@ app.get("/link/:linkId", async (req, res) => {
     UPDATE link_clicks SET click_count = click_count + 1 WHERE id = $1 RETURNING url;
   `;
 
+
   try {
     const result = await pool.query(query, [linkId]);
-    const url = result.rows[0].url;
-    res.redirect(url);
+    let url = result.rows[0].url;
+
+    // TODO INJECT CUSTOM URL QUERY PARAMETERS INTO THE URL
+     url = new URL(url);
+    //  VALUES CAN BE QUERIED FROM THE DATABASE 
+    // url.searchParams.append('email_address', 'value1'); // append a query parameter
+    // url.searchParams.append('param2', 'value2'); // append another query parameter
+
+    res.redirect(url.toString());
   } catch (error) {
     res.sendStatus(404);
     console.error("Error redirecting url status:", error);

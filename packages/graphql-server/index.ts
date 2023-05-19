@@ -474,7 +474,7 @@ const resolvers = {
         email_account_id,
         name,
         reply_to_email_address,
-        daily_limit = 50,
+        daily_limit = 0,
         status = "paused",
       }: any,
       context: { user: any }

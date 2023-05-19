@@ -75,9 +75,9 @@ const EmailTemplates = () => {
                 <Th color="white" fontWeight="bold">
                   Subject
                 </Th>
-                <Th color="white" fontWeight="bold">
+                {/* <Th color="white" fontWeight="bold">
                   Text Content
-                </Th>
+                </Th> */}
                 <Th color="white" fontWeight="bold">
                   HTML Content
                 </Th>
@@ -87,18 +87,18 @@ const EmailTemplates = () => {
               {emailTemplates.map((template: any) => (
                 <Tr key={template.id}>
                   <Td>
-                    <Link href={`/email-templates/${template.id}`} passHref>
-                      <Text
-                        as="a"
-                        color="blue.500"
-                        _hover={{ textDecoration: "underline" }}
-                      >
-                        {template.name}
-                      </Text>
-                    </Link>
+                    {/* disable ability to further view/edit template, they should just make a new one */}
+                    {/* <Link href={`/email-templates/${template.id}`} passHref> */}
+                    <Text
+                      as="a"
+                      color="blue.500"
+                      _hover={{ textDecoration: "underline" }}
+                    >
+                      {template.name}
+                    </Text>
                   </Td>
                   <Td>{template.subject}</Td>
-                  <Td>{template.text_content}</Td>
+                  {/* <Td>{template.text_content}</Td> */}
                   <Td>
                     <Box
                       maxH="100px"

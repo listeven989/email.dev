@@ -89,13 +89,13 @@ export default function CreateTemplateDropdown({ show, setShow }: Props) {
                         onChange={(e) => setNewTemplateSubject(e.target.value)}
                     />
                 </FormControl>
-                <FormControl id="newTextContent">
+                {/* <FormControl id="newTextContent">
                     <FormLabel>New Text Content</FormLabel>
                     <Textarea
                         value={newTextContent}
                         onChange={(e) => setNewTextContent(e.target.value)}
                     />
-                </FormControl>
+                </FormControl> */}
                 <FormControl id="newHtmlContent">
                     <FormLabel>New HTML Content</FormLabel>
                     <Textarea

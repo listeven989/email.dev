@@ -88,20 +88,8 @@ import {
             emailAccountId: selectedEmailAccountId,
           },
         });
-        toast({
-          title: "Test email sent successfully.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
       } catch (error: any) {
-        toast({
-          title: "Error sending test email.",
-          description: error.message,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        window.alert("Test email failed. Message: " + error.message);
       }
     };
   
@@ -155,8 +143,8 @@ import {
             <Box mt={4}>
               <Text fontWeight="bold">Subject:</Text>
               <Text>{selectedTemplate.subject}</Text>
-              <FormLabel mt={4}>Text Content</FormLabel>
-              <Textarea disabled value={selectedTemplate.text_content} readOnly />
+              {/* <FormLabel mt={4}>Text Content</FormLabel>
+              <Textarea disabled value={selectedTemplate.text_content} readOnly /> */}
               <FormLabel mt={4}>HTML Content</FormLabel>
               <Textarea value={selectedTemplate.html_content} readOnly />
             </Box>

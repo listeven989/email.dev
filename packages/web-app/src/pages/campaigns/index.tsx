@@ -185,13 +185,13 @@ const Campaigns = () => {
                   Daily Limit
                 </Th>
                 <Th color="white" fontWeight="bold">
-                  Emails Sent Today
+                  Sent Today
                 </Th>
                 <Th color="white" fontWeight="bold">
                   Recipients
                 </Th>
                 <Th color="white" fontWeight="bold">
-                  Total Emails Sent
+                  Total Sent
                 </Th>
                 <Th color="white" fontWeight="bold">
                   Status

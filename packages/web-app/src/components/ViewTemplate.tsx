@@ -17,8 +17,6 @@ export default function ViewTemplate({ template, hideSendTestEmail }: Props) {
     <Box mt={4}>
       <FormLabel>Subject</FormLabel>
       <Input disabled value={template?.subject} readOnly />
-      <FormLabel mt={4}>Text Content</FormLabel>
-      <Textarea disabled value={template?.text_content} readOnly />
       <FormLabel mt={4}>HTML Content</FormLabel>
       <Textarea value={template?.html_content} readOnly />
       {/* TODO: preview not actually displaying correctly */}

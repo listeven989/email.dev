@@ -340,7 +340,7 @@ const resolvers = {
 
       // query the email account
       const emailAccountResult = await pool.query(
-        "SELECT email_address, smtp_host, username, password, smtp_port  FROM email_accounts WHERE id = $1",
+        "SELECT display_name, email_address, smtp_host, username, password, smtp_port  FROM email_accounts WHERE id = $1",
         [emailAccountId]
       );
       const emailAccount = emailAccountResult.rows[0];
@@ -360,7 +360,7 @@ const resolvers = {
       });
 
       const mailOptions = {
-        from: emailAccount.email_address,
+        from: emailAccount.display_name + `<${emailAccount.email_address}>`,
         to: recipientEmail,
         subject: emailTemplate.subject,
         text: emailTemplate.text_content,
@@ -439,12 +439,12 @@ const resolvers = {
       } else {
         // Generate the bulk insert query and values
         query = `
-          INSERT INTO recipient_emails (campaign_id, email_address)
-          VALUES ${email_addresses
+        INSERT INTO recipient_emails (campaign_id, email_address)
+        VALUES ${email_addresses
             .map((_: any, i: number) => `($1, $${i + 2})`)
             .join(", ")}
-          ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
-          RETURNING *;
+        ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
+        RETURNING *;
         `;
         values = [campaign_id, ...email_addresses];
       }

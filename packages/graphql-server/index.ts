@@ -214,6 +214,7 @@ const resolvers = {
       }
 
       const templateId = campaignResult.rows[0].email_template_id;
+      console.log({ campaign: campaignResult.rows[0] })
 
       const result = await pool.query(
         "SELECT * FROM email_templates WHERE id = $1 AND user_id = $2",
@@ -476,11 +477,9 @@ const resolvers = {
       {
         id,
         email_account_id,
-        email_template_id = null,
         name,
         reply_to_email_address,
         daily_limit = 50,
-        emails_sent_today = 0,
         status = "paused",
       }: any,
       context: { user: any }
@@ -493,15 +492,13 @@ const resolvers = {
       }
 
       const result = await pool.query(
-        "UPDATE campaigns SET user_id = $1, email_account_id= $2, email_template_id= $3, name= $4, reply_to_email_address= $5, daily_limit= $6, emails_sent_today= $7, status= $8 WHERE id = $9 RETURNING *",
+        "UPDATE campaigns SET user_id = $1, email_account_id= $2, name= $3, reply_to_email_address= $4, daily_limit= $5, status= $6 WHERE id = $7 RETURNING *",
         [
           context.user.id,
           email_account_id,
-          email_template_id,
           name,
           reply_to_email_address,
           daily_limit,
-          emails_sent_today,
           status,
           id,
         ]

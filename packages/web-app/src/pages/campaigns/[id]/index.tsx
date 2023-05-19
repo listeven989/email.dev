@@ -16,6 +16,7 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import ViewTemplate from "@/components/ViewTemplate";
+import { useEffect } from "react";
 
 export const GET_CAMPAIGN = gql`
   query GetCampaign($id: ID!) {
@@ -46,6 +47,18 @@ const Campaign = () => {
   const { loading, error, data } = useQuery(GET_CAMPAIGN, {
     variables: { id },
   });
+
+
+
+  useEffect(() => {
+
+    if (error) {
+      if (error.message.includes('Email template not found or not authorized')) {
+        router.push('/campaigns/' + id + '/email-template')
+      }
+    }
+  }, [error])
+
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;

@@ -14,6 +14,12 @@ import {
   Flex,
   SimpleGrid,
   Stack,
+  Table,
+  Thead,
+  Tr,
+  Th,
+  Tbody,
+  Td,
 } from "@chakra-ui/react";
 import ViewTemplate from "@/components/ViewTemplate";
 import { useEffect } from "react";
@@ -29,6 +35,12 @@ export const GET_CAMPAIGN = gql`
       status
       created_at
       updated_at
+      recipientEmails {
+        id
+        email_address
+        read
+        read_at
+      }
     }
     emailTemplateByCampaignId(campaignId: $id) {
       id
@@ -36,8 +48,8 @@ export const GET_CAMPAIGN = gql`
       subject
       text_content
       html_content
+    }
   }
-}
 `;
 
 const Campaign = () => {
@@ -48,21 +60,18 @@ const Campaign = () => {
     variables: { id },
   });
 
+  // Add this function to the component
+  const openedEmails = () => {
+    const opened = data.campaign.recipientEmails.filter(
+      (recipient: any) => recipient.read
+    );
+    return opened;
+  };
 
-
-  useEffect(() => {
-
-    if (error) {
-      if (error.message.includes('Email template not found or not authorized')) {
-        router.push('/campaigns/' + id + '/email-template')
-      }
-    }
-  }, [error])
-
+  const totalOpened = openedEmails().length;
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
-
   if (!data) return null;
 
   const campaign = data.campaign;
@@ -71,7 +80,9 @@ const Campaign = () => {
     <Container maxW="container.md" py={12}>
       {campaign ? (
         <VStack spacing={6} align="left">
-          <Heading as="h1" size="lg">Campaign Details</Heading>
+          <Heading as="h1" size="lg">
+            Campaign Details
+          </Heading>
           <Box
             borderWidth={1}
             borderRadius="lg"
@@ -96,7 +107,7 @@ const Campaign = () => {
               <Box>
                 <Text fontWeight="bold">Status:</Text>
                 <Badge
-                  colorScheme={campaign.status === 'active' ? 'green' : 'red'}
+                  colorScheme={campaign.status === "active" ? "green" : "red"}
                 >
                   {campaign.status}
                 </Badge>
@@ -124,6 +135,35 @@ const Campaign = () => {
               </Button>
             </Link>
           </Stack>
+          <Heading as="h2" size="md">
+            Recipients who opened their emails ({totalOpened})
+          </Heading>
+          <Box
+            borderWidth={1}
+            borderRadius="lg"
+            p={6}
+            boxShadow="md"
+            bg="white"
+            w="100%"
+            overflow="auto"
+          >
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Email Address</Th>
+                  <Th>Opened At</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {openedEmails().map((recipient: any) => (
+                  <Tr key={recipient.id}>
+                    <Td>{recipient.email_address}</Td>
+                    <Td>{new Date(recipient.read_at).toLocaleString()}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
         </VStack>
       ) : (
         <Text>No campaign found.</Text>

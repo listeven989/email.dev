@@ -22,10 +22,14 @@ See the Github `Issues` section for new features that are being added. Feel free
 ## Common commands
 
 ```bash
-# development / local
+# development / setup
+pnpm i
+
+# development / running local
 pnpm --filter email-service cron:all
 pnpm --filter web-app dev
 pnpm --filter graphql-server start
+pnpm --filter tracking-service start
 
 # new database migrations
 pnpm --filter email-service setup:db
@@ -78,3 +82,7 @@ web-app
 graphql-server
 - backend for the web-app, creates campaigns, adds emails, etc
 
+tracking-service
+- express server with a couple of endpoints for tracking opens, link clicks etc
+- when the email-service cron sends out emails it appends <img> tags with a link to the tracking service to track opens
+- when deploy do a euphemism like newsletter-xxx.render.com instead of the name tracking-xxx or tracking-service-xxx (so google doesn't block it)

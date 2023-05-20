@@ -2,6 +2,8 @@ import * as dotenv from "dotenv";
 import { Client } from "pg";
 import { createTransport } from "nodemailer";
 import * as cron from "node-cron";
+import * as cheerio from "cheerio";
+import cronstrue from "cronstrue";
 
 dotenv.config();
 
@@ -53,7 +55,7 @@ async function sendCampaignEmails() {
 
       // Get recipient emails for the current campaign (with emails_sent_today < emailsToSend)
       const recipientsQuery = `
-          SELECT recipient_emails.email_address
+          SELECT recipient_emails.id, recipient_emails.email_address
           FROM recipient_emails
           JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
           WHERE recipient_emails.campaign_id = $1 AND campaigns.emails_sent_today < $2 AND recipient_emails.sent = false
@@ -77,17 +79,50 @@ async function sendCampaignEmails() {
 
       // Send the email to each recipient
       for (const recipient of recipients) {
+        console.log("Preparing to send email to " + recipient.email_address);
+  
         const sendMailOpts: any = {
           from: `${campaign.display_name} <${campaign.from_email}>`,
           to: recipient.email_address,
           subject: campaign.subject,
         };
 
+        const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/newsletter-image/${recipient.id}" />`;
+
+        const $ = cheerio.load(campaign.html_content);
+
+        // replace all links in the html content with tracking links
+        const links = $('a');
+
+        for (let i = 0; i < links.length; i++) {
+          const link = links[i];
+          const originalUrl = $(link).attr('href');
+
+          const query = `INSERT INTO link_clicks (url, recipient_email_id) VALUES ($1, $2) RETURNING id`;
+          const result = await client.query(query, [originalUrl, recipient.id]);
+          const linkClickId = result.rows[0].id;
+
+          $(link).attr('href', `${process.env.TRACKING_SERVICE_URL}/link/:${linkClickId}`);
+        }
+
+
+        // add the tracking pixel link into the html content
+        let htmlContent = campaign.html_content;
+        if ($("body").length > 0) {
+          $("body").append(trackingPixelLink);
+          htmlContent = $.html();
+        } else {
+          htmlContent = $.html();
+          htmlContent.append(trackingPixelLink);
+        }
+
+        console.log({ htmlContent });
+
         if (campaign.html_content && campaign.text_content) {
-          sendMailOpts["html"] = campaign.html_content;
+          sendMailOpts["html"] = htmlContent;
           sendMailOpts["text"] = campaign.text_content;
         } else if (campaign.html_content) {
-          sendMailOpts["html"] = campaign.html_content;
+          sendMailOpts["html"] = htmlContent;
         } else {
           sendMailOpts["text"] = campaign.text_content;
         }
@@ -149,9 +184,31 @@ async function sendCampaignEmails() {
   }
 }
 
+const CRON_LANG = "* * * * *";
+
 // Schedule the cron job to run every minute
 cron.schedule("* * * * *", () => {
-  console.log("Running email sender cron job every minute");
+  // Get date time in PDT time
+  const now = new Date();
+  const pdtDateTime = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    dateStyle: "full",
+    timeStyle: "long",
+  }).format(now);
+
+  // Convert CRON expression to human readable
+  const cronExpression = "* * * * *";
+  const humanReadableCron = cronstrue.toString(cronExpression);
+
+  console.log(`${pdtDateTime}: Running email sender cron job ${humanReadableCron}`);
+
+  // log TRACKING_SERVICE_URL
+  if (!process.env.TRACKING_SERVICE_URL) {
+    throw new Error(
+      "TRACKING_SERVICE_URL environment variable must be set to run this cron"
+    )
+  }
+
   sendCampaignEmails()
     .then(() => {
       console.log("Finished sending emails for this minute");

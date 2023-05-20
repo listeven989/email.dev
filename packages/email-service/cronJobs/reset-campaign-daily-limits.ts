@@ -41,12 +41,20 @@ async function resetEmailsSentToday() {
 
 // Schedule the cron job to run daily at 00:00
 cron.schedule("0 0 * * *", () => {
-  console.log("Running daily emails_sent_today reset cron job");
+  // Get date time in PDT time
+  const now = new Date();
+  const pdtDateTime = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    dateStyle: "full",
+    timeStyle: "long",
+  }).format(now);
+
+  console.log(`${pdtDateTime}: Running daily emails_sent_today reset cron job`);
   resetEmailsSentToday()
     .then(() => {
       console.log("Finished resetting emails_sent_today for today");
     })
     .catch((error) => {
-      console.error("Error in daily emails_sent_today reset cron job:", error);
+      console.error("Error in daily emails_sent_today reset cron job: ", error);
     });
 });

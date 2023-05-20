@@ -160,3 +160,33 @@ BEGIN
     ADD COLUMN user_id UUID REFERENCES users(id) ON DELETE CASCADE;
   END IF;
 END $$;
+
+-- Rename the existing read column to read_old
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'recipient_emails' AND column_name = 'read') THEN
+    ALTER TABLE recipient_emails
+    RENAME COLUMN read TO read_old;
+  END IF;
+END $$;
+
+-- Add a new read column with integer data type and default value 0
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'recipient_emails' AND column_name = 'read') THEN
+    ALTER TABLE recipient_emails
+    ADD COLUMN read INTEGER NOT NULL DEFAULT 0;
+  END IF;
+END $$;
+
+-- Update the new read column with 1 where read_old is true, and 0 where it's false
+UPDATE recipient_emails
+SET read = CASE
+    WHEN read_old = TRUE THEN 1
+    ELSE 0
+END;
+
+-- Drop the read_old column
+ALTER TABLE recipient_emails
+DROP COLUMN read_old;
+

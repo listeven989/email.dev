@@ -15,13 +15,15 @@
   "author": "steven4354",
   "license": "ISC",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "cronstrue": "^2.27.0",
     "dotenv": "^16.0.3",
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.1",
-    "pg": "^8.10.0"
+    "pg": "^8.11.0"
   },
   "devDependencies": {
-    "@types/node": "^20.1.0",
+    "@types/node": "^20.2.1",
     "@types/node-cron": "^3.0.7",
     "@types/nodemailer": "^6.4.7",
     "@types/pg": "^8.6.6",

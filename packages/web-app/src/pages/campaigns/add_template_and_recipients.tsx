@@ -74,7 +74,7 @@ const AddTemplateAndRecipients = () => {
         emailAddresses: emailAddresses.split("\n"),
       },
     });
-    router.push(`/campaigns/${campaignId}`);
+    router.push(`/campaigns`);
   };
 
   if (loading) return <p>Loading...</p>;

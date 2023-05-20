@@ -81,6 +81,13 @@ const typeDefs = gql`
     sent_at: String
     created_at: String!
     updated_at: String!
+    read: Int!
+    read_at: String!
+  }
+
+  type RecipientReadInfo {
+    email_address: String!
+    read_count: Int!
   }
 
   type Query {
@@ -91,6 +98,7 @@ const typeDefs = gql`
     recipientEmails(campaignId: ID!): [RecipientEmail]
     emailTemplateByCampaignId(campaignId: ID!): EmailTemplate
     emailTemplate(id: ID!): EmailTemplate
+    recipientsWhoReadEmail(campaignId: ID!): [RecipientReadInfo]
   }
 
   type Mutation {
@@ -168,6 +176,28 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
+    recipientsWhoReadEmail: async (_: any, { campaignId }: any, context: { user: any }) => {
+      checkAuth(context);
+  
+      const campaignResult = await pool.query(
+        "SELECT id FROM campaigns WHERE id = $1 AND user_id = $2",
+        [campaignId, context.user.id]
+      );
+  
+      if (campaignResult.rowCount === 0) {
+        throw new Error("Campaign not found or not authorized");
+      }
+  
+      // read greater than 0
+      const result = await pool.query(
+        `SELECT email_address, read as read_count
+         FROM recipient_emails
+         WHERE campaign_id = $1 AND read > 0`,
+        [campaignId]
+      );
+  
+      return result.rows;
+    },
     emailTemplate: async (_: any, { id }: any, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query(
@@ -182,7 +212,6 @@ const resolvers = {
 
       return emailTemplate;
     },
-
     campaign: async (_: any, { id }: any, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query(
@@ -214,6 +243,7 @@ const resolvers = {
       }
 
       const templateId = campaignResult.rows[0].email_template_id;
+      console.log({ campaign: campaignResult.rows[0] });
 
       const result = await pool.query(
         "SELECT * FROM email_templates WHERE id = $1 AND user_id = $2",
@@ -227,7 +257,6 @@ const resolvers = {
 
       return emailTemplate;
     },
-
     recipientEmails: async (
       _: any,
       { campaignId }: any,
@@ -427,12 +456,12 @@ const resolvers = {
       if (!allowMultiCampaignRecipients) {
         // If setting is off, don't insert email addresses that already exist
         query = `
-        INSERT INTO recipient_emails (campaign_id, email_address)
-        SELECT $1, email
-        FROM unnest($2::varchar[]) AS t(email)
-        LEFT JOIN recipient_emails re ON re.email_address = t.email
-        WHERE re.email_address IS NULL
-        RETURNING *;
+          INSERT INTO recipient_emails (campaign_id, email_address)
+          SELECT $1, email
+          FROM unnest($2::varchar[]) AS t(email)
+          LEFT JOIN recipient_emails re ON re.email_address = t.email
+          WHERE re.email_address IS NULL
+          RETURNING *;
         `;
         values = [campaign_id, email_addresses];
       } else {
@@ -440,12 +469,11 @@ const resolvers = {
         query = `
         INSERT INTO recipient_emails (campaign_id, email_address)
         VALUES ${email_addresses
-            .map((_: any, i: number) => `($1, $${i + 2})`)
-            .join(", ")}
+          .map((_: any, i: number) => `($1, $${i + 2})`)
+          .join(", ")}
         ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
         RETURNING *;
         `;
-
         values = [campaign_id, ...email_addresses];
       }
 
@@ -472,11 +500,9 @@ const resolvers = {
       {
         id,
         email_account_id,
-        // email_template_id = null,
         name,
         reply_to_email_address,
-        daily_limit = 50,
-        // emails_sent_today = 0,
+        daily_limit = 0,
         status = "paused",
       }: any,
       context: { user: any }
@@ -576,7 +602,7 @@ const logResponse = (response: any) => {
   if (response.errors) {
     console.log("Error:", response.errors);
   } else {
-    console.log("Success:", response.data);
+    // console.log("Success:", response.data);
   }
   return response;
 };

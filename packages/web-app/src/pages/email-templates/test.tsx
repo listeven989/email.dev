@@ -8,7 +8,6 @@ import {
     Input,
     Select,
     VStack,
-    useToast,
     Text,
     Textarea,
   } from "@chakra-ui/react";
@@ -65,7 +64,6 @@ import {
     );
     const [recipientEmail, setRecipientEmail] = useState("");
     const [sendTestEmail] = useMutation(SEND_TEST_EMAIL);
-    const toast = useToast();
   
     const {
       loading: templatesLoading,
@@ -88,6 +86,9 @@ import {
             emailAccountId: selectedEmailAccountId,
           },
         });
+
+        // alert using a popup
+        window.alert("Test email sent!");
       } catch (error: any) {
         window.alert("Test email failed. Message: " + error.message);
       }

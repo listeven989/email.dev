@@ -105,6 +105,9 @@ const typeDefs = gql`
     signUp(email: String!, password: String!): AuthPayload!
     login(email: String!, password: String!): AuthPayload!
 
+    archiveCampaign(id: ID!): Campaign
+    archiveEmailTemplate(id: ID!): EmailTemplate
+
     sendTestEmail(
       emailTemplateId: ID!
       recipientEmail: String!
@@ -174,138 +177,143 @@ const typeDefs = gql`
   }
 `;
 
+const checkAuthAndQuery = async (query: string, values: any[], context: { user: any }) => {
+  checkAuth(context);
+  const result = await pool.query(query, values);
+  return result;
+};
+
+const throwErrorIfNotFound = (rows: any[], errorMessage: string) => {
+  if (rows.length === 0) {
+    throw new Error(errorMessage);
+  }
+};
+
 const resolvers = {
   Query: {
-    recipientsWhoReadEmail: async (_: any, { campaignId }: any, context: { user: any }) => {
-      checkAuth(context);
-  
-      const campaignResult = await pool.query(
-        "SELECT id FROM campaigns WHERE id = $1 AND user_id = $2",
-        [campaignId, context.user.id]
-      );
-  
-      if (campaignResult.rowCount === 0) {
-        throw new Error("Campaign not found or not authorized");
-      }
-  
-      // read greater than 0
-      const result = await pool.query(
-        `SELECT email_address, read as read_count
-         FROM recipient_emails
-         WHERE campaign_id = $1 AND read > 0`,
-        [campaignId]
-      );
-  
+    campaigns: async (_: any, __: any, context: { user: any }) => {
+      const query = `
+        SELECT * FROM campaigns
+        WHERE user_id = $1 AND archive = FALSE
+        ORDER BY created_at DESC
+      `;
+      const result = await checkAuthAndQuery(query, [context.user.id], context);
       return result.rows;
     },
-    emailTemplate: async (_: any, { id }: any, context: { user: any }) => {
-      checkAuth(context);
-      const result = await pool.query(
-        "SELECT * FROM email_templates WHERE id = $1 AND user_id = $2",
-        [id, context.user.id]
-      );
-      const emailTemplate = result.rows[0];
 
-      if (!emailTemplate) {
-        throw new Error("Email template not found or not authorized");
-      }
-
-      return emailTemplate;
+    emailTemplates: async (_: any, __: any, context: { user: any }) => {
+      const query = `
+        SELECT * FROM email_templates
+        WHERE user_id = $1 AND archive = FALSE
+        ORDER BY created_at DESC
+      `;
+      const result = await checkAuthAndQuery(query, [context.user.id], context);
+      return result.rows;
     },
-    campaign: async (_: any, { id }: any, context: { user: any }) => {
-      checkAuth(context);
-      const result = await pool.query(
-        "SELECT * FROM campaigns WHERE id = $1 AND user_id = $2",
-        [id, context.user.id]
+
+    recipientsWhoReadEmail: async (
+      _: any,
+      { campaignId }: any,
+      context: { user: any }
+    ) => {
+      const campaignQuery = `
+        SELECT id FROM campaigns WHERE id = $1 AND user_id = $2
+      `;
+      const campaignResult = await checkAuthAndQuery(
+        campaignQuery,
+        [campaignId, context.user.id],
+        context
       );
-      const campaign = result.rows[0];
 
-      if (!campaign) {
-        throw new Error("Campaign not found or not authorized");
-      }
+      throwErrorIfNotFound(campaignResult.rows, "Campaign not found or not authorized");
 
-      return campaign;
+      const query = `
+        SELECT email_address, read as read_count
+        FROM recipient_emails
+        WHERE campaign_id = $1 AND read > 0
+      `;
+      const result = await checkAuthAndQuery(query, [campaignId], context);
+      return result.rows;
+    },
+
+    emailTemplate: async (_: any, { id }: any, context: { user: any }) => {
+      const query = "SELECT * FROM email_templates WHERE id = $1 AND user_id = $2";
+      const result = await checkAuthAndQuery(query, [id, context.user.id], context);
+      throwErrorIfNotFound(result.rows, "Email template not found or not authorized");
+      return result.rows[0];
+    },
+    campaign: async (
+      _: any,
+      { id }: { id: string },
+      context: { user: any }
+    ) => {
+      const query = "SELECT * FROM campaigns WHERE id = $1 AND user_id = $2";
+      const result = await checkAuthAndQuery(query, [id, context.user.id], context);
+      throwErrorIfNotFound(result.rows, "Campaign not found or not authorized");
+      return result.rows[0];
     },
 
     emailTemplateByCampaignId: async (
       _: any,
-      { campaignId }: any,
+      { campaignId }: { campaignId: string },
       context: { user: any }
     ) => {
-      checkAuth(context);
-      const campaignResult = await pool.query(
-        "SELECT email_template_id FROM campaigns WHERE id = $1 AND user_id = $2",
-        [campaignId, context.user.id]
-      );
-
-      if (campaignResult.rowCount === 0) {
-        throw new Error("Campaign not found or not authorized");
-      }
-
+      const campaignQuery = "SELECT email_template_id FROM campaigns WHERE id = $1 AND user_id = $2";
+      const campaignResult = await checkAuthAndQuery(campaignQuery, [campaignId, context.user.id], context);
+      throwErrorIfNotFound(campaignResult.rows, "Campaign not found or not authorized");
+    
       const templateId = campaignResult.rows[0].email_template_id;
-      console.log({ campaign: campaignResult.rows[0] });
-
-      const result = await pool.query(
-        "SELECT * FROM email_templates WHERE id = $1 AND user_id = $2",
-        [templateId, context.user.id]
-      );
-      const emailTemplate = result.rows[0];
-
-      if (!emailTemplate) {
-        throw new Error("Email template not found or not authorized");
-      }
-
-      return emailTemplate;
+      const query = "SELECT * FROM email_templates WHERE id = $1 AND user_id = $2";
+      const result = await checkAuthAndQuery(query, [templateId, context.user.id], context);
+      throwErrorIfNotFound(result.rows, "Email template not found or not authorized");
+    
+      return result.rows[0];
     },
     recipientEmails: async (
       _: any,
-      { campaignId }: any,
+      { campaignId }: { campaignId: string },
       context: { user: any }
     ) => {
-      checkAuth(context);
-
-      const campaignResult = await pool.query(
-        "SELECT id FROM campaigns WHERE id = $1 AND user_id = $2",
-        [campaignId, context.user.id]
-      );
-
-      if (campaignResult.rowCount === 0) {
-        throw new Error("Campaign not found or not authorized");
-      }
-
-      const result = await pool.query(
-        "SELECT * FROM recipient_emails WHERE campaign_id = $1",
-        [campaignId]
-      );
+      const campaignQuery = "SELECT id FROM campaigns WHERE id = $1 AND user_id = $2";
+      const campaignResult = await checkAuthAndQuery(campaignQuery, [campaignId, context.user.id], context);
+      throwErrorIfNotFound(campaignResult.rows, "Campaign not found or not authorized");
+    
+      const query = "SELECT * FROM recipient_emails WHERE campaign_id = $1";
+      const result = await checkAuthAndQuery(query, [campaignId], context);
       return result.rows;
     },
-    emailAccounts: async (_: any, __: any, context: { user: any }) => {
-      checkAuth(context);
-      const result = await pool.query(
-        "SELECT * FROM email_accounts WHERE user_id = $1",
-        [context.user.id]
-      );
-      return result.rows;
-    },
-    emailTemplates: async (_: any, __: any, context: { user: any }) => {
-      checkAuth(context);
-      const result = await pool.query(
-        "SELECT * FROM email_templates WHERE user_id = $1 ORDER BY created_at DESC",
-        [context.user.id]
-      );
-      return result.rows;
-    },
-
-    campaigns: async (_: any, __: any, context: { user: any }) => {
-      checkAuth(context);
-      const result = await pool.query(
-        "SELECT * FROM campaigns WHERE user_id = $1 ORDER BY created_at DESC",
-        [context.user.id]
-      );
+    emailAccounts: async (
+      _: any,
+      __: any,
+      context: { user: any }
+    ) => {
+      const query = "SELECT * FROM email_accounts WHERE user_id = $1";
+      const result = await checkAuthAndQuery(query, [context.user.id], context);
       return result.rows;
     },
   },
   Mutation: {
+    archiveCampaign: async (_: any, { id }: any, context: { user: any }) => {
+      checkAuth(context);
+      const result = await pool.query(
+        "UPDATE campaigns SET archive = TRUE WHERE id = $1 AND user_id = $2 RETURNING *",
+        [id, context.user.id]
+      );
+      return result.rows[0];
+    },
+
+    archiveEmailTemplate: async (
+      _: any,
+      { id }: any,
+      context: { user: any }
+    ) => {
+      checkAuth(context);
+      const result = await pool.query(
+        "UPDATE email_templates SET archive = TRUE WHERE id = $1 AND user_id = $2 RETURNING *",
+        [id, context.user.id]
+      );
+      return result.rows[0];
+    },
     signUp: async (_: any, { email, password }: any) => {
       const hashedPassword = await bcrypt.hash(password, 10);
       const result = await pool.query(

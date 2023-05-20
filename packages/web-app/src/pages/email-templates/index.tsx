@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, gql, useMutation } from "@apollo/client";
 import {
   Box,
   Heading,
@@ -28,8 +28,24 @@ const GET_EMAIL_TEMPLATES = gql`
   }
 `;
 
+const ARCHIVE_EMAIL_TEMPLATE = gql`
+  mutation ArchiveEmailTemplate($id: ID!) {
+    archiveEmailTemplate(id: $id) {
+      id
+    }
+  }
+`;
+
 const EmailTemplates = () => {
   const { loading, error, data } = useQuery(GET_EMAIL_TEMPLATES);
+  const [archiveEmailTemplateMutation] = useMutation(ARCHIVE_EMAIL_TEMPLATE);
+
+  const archiveEmailTemplate = async (templateId: string) => {
+    await archiveEmailTemplateMutation({
+      variables: { id: templateId },
+      refetchQueries: [{ query: GET_EMAIL_TEMPLATES }],
+    });
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
@@ -75,11 +91,11 @@ const EmailTemplates = () => {
                 <Th color="white" fontWeight="bold">
                   Subject
                 </Th>
-                {/* <Th color="white" fontWeight="bold">
-                  Text Content
-                </Th> */}
                 <Th color="white" fontWeight="bold">
                   HTML Content
+                </Th>
+                <Th color="white" fontWeight="bold">
+                  Quick Actions
                 </Th>
               </Tr>
             </Thead>
@@ -87,8 +103,6 @@ const EmailTemplates = () => {
               {emailTemplates.map((template: any) => (
                 <Tr key={template.id}>
                   <Td>
-                    {/* disable ability to further view/edit template, they should just make a new one */}
-                    {/* <Link href={`/email-templates/${template.id}`} passHref> */}
                     <Text
                       as="a"
                       color="blue.500"
@@ -98,7 +112,6 @@ const EmailTemplates = () => {
                     </Text>
                   </Td>
                   <Td>{template.subject}</Td>
-                  {/* <Td>{template.text_content}</Td> */}
                   <Td>
                     <Box
                       maxH="100px"
@@ -108,6 +121,15 @@ const EmailTemplates = () => {
                     >
                       {template.html_content}
                     </Box>
+                  </Td>
+                  <Td>
+                    <Button
+                      size="xs"
+                      colorScheme="gray"
+                      onClick={() => archiveEmailTemplate(template.id)}
+                    >
+                      Archive
+                    </Button>
                   </Td>
                 </Tr>
               ))}

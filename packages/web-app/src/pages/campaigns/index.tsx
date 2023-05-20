@@ -52,7 +52,15 @@ const UPDATE_CAMPAIGN_STATUS = gql`
   }
 `;
 
-const CampaignRow = ({ campaign, toggleCampaignStatus }: { campaign: any, toggleCampaignStatus: any }) => {
+const CampaignRow = ({
+  campaign,
+  toggleCampaignStatus,
+  archiveCampaign,
+}: {
+  campaign: any;
+  toggleCampaignStatus: any;
+  archiveCampaign: any;
+}) => {
   const { loading, error, data } = useQuery(GET_RECIPIENT_EMAILS, {
     variables: { campaignId: campaign.id },
   });
@@ -74,7 +82,7 @@ const CampaignRow = ({ campaign, toggleCampaignStatus }: { campaign: any, toggle
 
   return (
     <Tr key={campaign.id}>
-      <Td>
+      <Td textAlign={"center"}>
         <Link href={`/campaigns/${campaign.id}`} passHref>
           <Text
             as="a"
@@ -86,37 +94,57 @@ const CampaignRow = ({ campaign, toggleCampaignStatus }: { campaign: any, toggle
           </Text>
         </Link>
       </Td>
-      <Td>{campaign.reply_to_email_address}</Td>
-      <Td>{campaign.daily_limit}</Td>
-      <Td>{campaign.emails_sent_today}</Td>
-      
-      <Td>{recipientEmails.length}</Td>
-      <Td>
+      <Td textAlign={"center"}>{campaign.reply_to_email_address}</Td>
+      <Td textAlign={"center"}>{campaign.daily_limit}</Td>
+      <Td textAlign={"center"}>{campaign.emails_sent_today}</Td>
+
+      <Td textAlign={"center"}>{recipientEmails.length}</Td>
+      <Td textAlign={"center"}>
         {recipientEmails.reduce(
           (count: number, email: any) => (email.sent ? count + 1 : count),
           0
         )}
       </Td>
-      <Td>
+      <Td textAlign={"center"}>
         <Badge
-          colorScheme={campaign.status === "active" ? "green" : "red"}
+          colorScheme={
+            campaign.status === "active"
+              ? "green"
+              : campaign.status === "completed"
+              ? "purple"
+              : "red"
+          }
           borderRadius="md"
           px={2}
           py={1}
+          width="100px"
         >
           {campaign.status}
         </Badge>
       </Td>
-      <Td>
-        {campaign.status !== "completed" && (
+      <Td textAlign={"center"}>
+        <VStack spacing={2}>
+          {campaign.status !== "completed" && (
+            <Button
+              size="xs"
+              colorScheme={campaign.status === "active" ? "red" : "green"}
+              onClick={() => toggleCampaignStatus(campaign)}
+              width="140px" // Set a fixed width
+            >
+              {campaign.status === "active"
+                ? "Pause Campaign"
+                : "Start Campaign"}
+            </Button>
+          )}
           <Button
             size="xs"
-            colorScheme={campaign.status === "active" ? "red" : "green"}
-            onClick={() => toggleCampaignStatus(campaign)}
+            colorScheme="gray"
+            onClick={() => archiveCampaign(campaign.id)}
+            width="140px" // Set a fixed width
           >
-            {campaign.status === "active" ? "Pause Campaign" : "Start Campaign"}
+            Archive Campaign
           </Button>
-        )}
+        </VStack>
       </Td>
     </Tr>
   );
@@ -125,6 +153,24 @@ const CampaignRow = ({ campaign, toggleCampaignStatus }: { campaign: any, toggle
 const Campaigns = () => {
   const { loading, error, data } = useQuery(GET_CAMPAIGNS);
   const [updateCampaignStatus] = useMutation(UPDATE_CAMPAIGN_STATUS);
+
+  const ARCHIVE_CAMPAIGN = gql`
+    mutation ArchiveCampaign($id: ID!) {
+      archiveCampaign(id: $id) {
+        id
+        status
+      }
+    }
+  `;
+
+  const [archiveCampaignMutation] = useMutation(ARCHIVE_CAMPAIGN);
+
+  const archiveCampaign = async (campaignId: string) => {
+    await archiveCampaignMutation({
+      variables: { id: campaignId },
+      refetchQueries: [{ query: GET_CAMPAIGNS }],
+    });
+  };
 
   const toggleCampaignStatus = async (campaign: any) => {
     const newStatus = campaign.status === "active" ? "paused" : "active";
@@ -175,35 +221,40 @@ const Campaigns = () => {
           >
             <Thead bg="gray.500">
               <Tr>
-              <Th color="white" fontWeight="bold">
+                <Th color="white" fontWeight="bold" textAlign="center">
                   Name
                 </Th>
-                <Th color="white" fontWeight="bold">
+                <Th color="white" fontWeight="bold" textAlign="center">
                   Reply To
                 </Th>
-                <Th color="white" fontWeight="bold">
+                <Th color="white" fontWeight="bold" textAlign="center">
                   Daily Limit
                 </Th>
-                <Th color="white" fontWeight="bold">
+                <Th color="white" fontWeight="bold" textAlign="center">
                   Sent Today
                 </Th>
-                <Th color="white" fontWeight="bold">
+                <Th color="white" fontWeight="bold" textAlign="center">
                   Recipients
                 </Th>
-                <Th color="white" fontWeight="bold">
+                <Th color="white" fontWeight="bold" textAlign="center">
                   Total Sent
                 </Th>
-                <Th color="white" fontWeight="bold">
+                <Th color="white" fontWeight="bold" textAlign="center">
                   Status
                 </Th>
-                <Th color="white" fontWeight="bold">
+                <Th color="white" fontWeight="bold" textAlign="center">
                   Action
                 </Th>
               </Tr>
             </Thead>
             <Tbody>
               {campaigns.map((campaign: any) => (
-                <CampaignRow campaign={campaign} key={campaign.id} toggleCampaignStatus={toggleCampaignStatus} />
+                <CampaignRow
+                  campaign={campaign}
+                  key={campaign.id}
+                  toggleCampaignStatus={toggleCampaignStatus}
+                  archiveCampaign={archiveCampaign}
+                />
               ))}
             </Tbody>
           </Table>

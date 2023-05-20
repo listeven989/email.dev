@@ -64,7 +64,7 @@ function Signup() {
       minHeight="calc(100vh - 60px)"
       alignItems="center"
       justifyContent="center"
-      bgGradient="linear(to-r, teal.500, green.500)"
+      bgGradient="linear(to-r, #F8FAFC, #708196)"
     >
       <Center
         as="form"
@@ -78,7 +78,7 @@ function Signup() {
       >
         <VStack spacing={6} width="69%">
           <Text fontSize="3xl" fontWeight="bold" color="teal.500">
-            Signup
+            Create an account
           </Text>
           <FormControl id="email" isRequired>
             <FormLabel>Email:</FormLabel>
@@ -117,7 +117,7 @@ function Signup() {
             </InputGroup>
           </FormControl>
           <Button type="submit" colorScheme="teal" size="md">
-            Signup
+            Sign up
           </Button>
           <Text fontSize="sm">
             Already have an account?{" "}

@@ -112,12 +112,12 @@ const Campaign = () => {
             </Link>
             <Link href={`/campaigns/${id}/email-template`} passHref>
               <Button as="a" colorScheme="blue" variant="outline">
-                View / Change Email Template
+                View / Edit Email Template
               </Button>
             </Link>
             <Link href={`/campaigns/${id}/recipients`} passHref>
               <Button as="a" colorScheme="blue" variant="outline">
-                Manage Recipients
+                Add / Edit Recipients
               </Button>
             </Link>
           </Stack>
@@ -137,7 +137,8 @@ const Campaign = () => {
               <Thead>
                 <Tr>
                   <Th>Email Address</Th>
-                  <Th>Read Count</Th>
+                  <Th>Open Count</Th>
+                  <Th>Last Open Time</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -145,10 +146,20 @@ const Campaign = () => {
                   <Tr key={recipient.email_address}>
                     <Td>{recipient.email_address}</Td>
                     <Td>{recipient.read_count}</Td>
+                    <Td>{"not yet available"}</Td>
                   </Tr>
                 ))}
+                
               </Tbody>
+              
             </Table>
+            {
+                  data.recipientsWhoReadEmail.length == 0 && (
+                    <div style={{display: "flex", justifyContent: "center", alignItems: "center", paddingTop: "1rem"}}>
+                      <Text>No recipients opened your emails yet!</Text>
+                    </div>
+                  )
+                }
           </Box>
         </VStack>
       ) : (

@@ -79,7 +79,7 @@ function Login() {
       minHeight="calc(100vh - 60px)"
       alignItems="center"
       justifyContent="center"
-      bgGradient="linear(to-r, teal.500, green.500)"
+      bgGradient="linear(to-r, #F8FAFC, #708196)"
     >
       <Center
         as="form"
@@ -138,7 +138,7 @@ function Login() {
             Need an account?{" "}
             <Link href="/signup">
               <Text as="span" color="teal.500" textDecoration="underline">
-                Signup
+                Sign up
               </Text>
             </Link>
           </Text>

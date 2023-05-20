@@ -196,7 +196,7 @@ const Campaigns = () => {
           <Heading as="h1" size="lg">
             Campaigns
           </Heading>
-          <Link href="/campaigns/new">
+          {/* <Link href="/campaigns/new">
             <Button
               as="a"
               colorScheme="blue"
@@ -208,7 +208,7 @@ const Campaigns = () => {
             >
               Create New Campaign
             </Button>
-          </Link>
+          </Link> */}
         </Flex>
         <Box w="100%">
           <Table

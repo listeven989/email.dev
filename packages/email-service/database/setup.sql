@@ -180,13 +180,41 @@ BEGIN
 END $$;
 
 -- Update the new read column with 1 where read_old is true, and 0 where it's false
-UPDATE recipient_emails
-SET read = CASE
-    WHEN read_old = TRUE THEN 1
-    ELSE 0
-END;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'recipient_emails' AND column_name = 'read_old') THEN
+    UPDATE recipient_emails
+      SET read = CASE
+          WHEN pg_typeof(read_old) = 'boolean'::regtype AND read_old::boolean = TRUE THEN 1
+          WHEN pg_typeof(read_old) = 'integer'::regtype AND read_old = 1 THEN 1
+          ELSE 0
+      END;
+  END IF;
+END $$;
 
 -- Drop the read_old column
-ALTER TABLE recipient_emails
-DROP COLUMN read_old;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'recipient_emails' AND column_name = 'read_old') THEN
+    ALTER TABLE recipient_emails
+    DROP COLUMN read_old;
+  END IF;
+END $$;
 
+-- Add archive column to campaigns table
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'archive') THEN
+    ALTER TABLE campaigns
+    ADD COLUMN archive BOOLEAN NOT NULL DEFAULT FALSE;
+  END IF;
+END $$;
+
+-- Add archive column to email_templates table
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'email_templates' AND column_name = 'archive') THEN
+    ALTER TABLE email_templates
+    ADD COLUMN archive BOOLEAN NOT NULL DEFAULT FALSE;
+  END IF;
+END $$;

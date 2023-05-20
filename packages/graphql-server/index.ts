@@ -602,7 +602,7 @@ const logResponse = (response: any) => {
   if (response.errors) {
     console.log("Error:", response.errors);
   } else {
-    console.log("Success:", response.data);
+    // console.log("Success:", response.data);
   }
   return response;
 };

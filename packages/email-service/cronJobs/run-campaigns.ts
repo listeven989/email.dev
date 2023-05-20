@@ -3,6 +3,7 @@ import { Client } from "pg";
 import { createTransport } from "nodemailer";
 import * as cron from "node-cron";
 import * as cheerio from "cheerio";
+import cronstrue from "cronstrue";
 
 dotenv.config();
 

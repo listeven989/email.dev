@@ -12,6 +12,7 @@ importers:
       '@types/nodemailer': ^6.4.7
       '@types/pg': ^8.6.6
       cheerio: ^1.0.0-rc.12
+      cronstrue: ^2.27.0
       dotenv: ^16.0.3
       node-cron: ^3.0.2
       nodemailer: ^6.9.1
@@ -20,6 +21,7 @@ importers:
       typescript: ^5.0.4
     dependencies:
       cheerio: 1.0.0-rc.12
+      cronstrue: 2.27.0
       dotenv: 16.0.3
       node-cron: 3.0.2
       nodemailer: 6.9.1
@@ -3001,6 +3003,11 @@ packages:
 
   /create-require/1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
+
+  /cronstrue/2.27.0:
+    resolution: {integrity: sha512-p+w818EttA27EfIeZP5Z3k3ps9hy6DlRv3txbWxysTIlWEAE6DdYIjCaaeZhWaNfcowuXZrg0HVFWLTqGb85hg==}
+    hasBin: true
+    dev: false
 
   /cross-spawn/7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}

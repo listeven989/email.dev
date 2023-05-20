@@ -86,7 +86,7 @@ async function sendCampaignEmails() {
           subject: campaign.subject,
         };
 
-        const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/track-email-open/:${recipient.id}" style="display:none;" />`;
+        const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/newsletter-image/:${recipient.id}" />`;
 
         const $ = cheerio.load(campaign.html_content);
 

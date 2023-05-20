@@ -42,7 +42,8 @@ const updateEmailStatus = async (emailId: string) => {
   }
 };
 
-app.get("/track-email-open/:recipientEmailId", async (req, res) => {
+// tracking endpoint but renamed to newsletter-image so that gmail doesn't block it
+app.get("/newsletter-image/:recipientEmailId", async (req, res) => {
   let emailId = req.params.recipientEmailId;
   emailId = emailId.replace(":", "");
 
@@ -82,3 +83,9 @@ app.get("/link/:linkId", async (req, res) => {
     console.error("Error redirecting url status:", error);
   }
 });
+
+app.get("/", async (req, res) => {
+  res.json({
+    message: "Newsletter service"
+  })
+})

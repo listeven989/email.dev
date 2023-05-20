@@ -31,8 +31,8 @@ const pool = new Pool(connectionString);
 const updateEmailStatus = async (emailId: string) => {
   const query = `
     UPDATE recipient_emails
-    SET read = true, read_at = $1
-    WHERE id = $2 AND read = false
+    SET read = read + 1, read_at = $1
+    WHERE id = $2 AND read >= 0
   `;
 
   try {

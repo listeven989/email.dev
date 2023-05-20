@@ -42,12 +42,18 @@ const CreateEmailTemplate = () => {
   const toast = useToast();
 
   const handleCreateEmailTemplate = async () => {
-    const htmlContent =
+    let htmlContent =
       contentFormat === "markdown"
         ? markdownToEmailHTML(newMarkdownContent)
         : newTemplateHtmlContent;
 
     try {
+      // check if the htmlContent has a body tag any where
+      // if not add <body></body> to it
+      if (!htmlContent.includes("<body>")) {
+        htmlContent = `<body>${htmlContent}</body>`;
+      }
+
       await createEmailTemplate({
         variables: {
           name: newTemplateName,

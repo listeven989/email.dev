@@ -78,6 +78,8 @@ async function sendCampaignEmails() {
 
       // Send the email to each recipient
       for (const recipient of recipients) {
+        console.log("Preparing to send email to " + recipient.email_address);
+  
         const sendMailOpts: any = {
           from: `${campaign.display_name} <${campaign.from_email}>`,
           to: recipient.email_address,

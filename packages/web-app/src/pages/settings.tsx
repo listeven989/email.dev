@@ -24,7 +24,7 @@ function Settings() {
       minHeight="calc(100vh - 60px)"
       alignItems="center"
       justifyContent="center"
-      bgGradient="linear(to-r, teal.500, green.500)"
+      bgGradient="linear(to-r, #F8FAFC, #708196)"
     >
       <Center
         bg="white"

@@ -18,6 +18,7 @@ import AuthLink from "./AuthLink";
 const Links = [
   //   { name: "Dashboard", href: "/dashboard" },
   { name: "Campaigns", href: "/campaigns" },
+  { name: "New Campaign", href: "/campaigns/new" },
   { name: "Email Accounts", href: "/email-accounts" },
   { name: "Email Tester", href: "/email-templates/test" },
   { name: "Email Templates", href: "/email-templates" },

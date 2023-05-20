@@ -81,6 +81,13 @@ const typeDefs = gql`
     sent_at: String
     created_at: String!
     updated_at: String!
+    read: Boolean!
+    read_at: String!
+  }
+
+  type RecipientReadInfo {
+    email_address: String!
+    read_count: Int!
   }
 
   type Query {
@@ -91,6 +98,7 @@ const typeDefs = gql`
     recipientEmails(campaignId: ID!): [RecipientEmail]
     emailTemplateByCampaignId(campaignId: ID!): EmailTemplate
     emailTemplate(id: ID!): EmailTemplate
+    recipientsWhoReadEmail(campaignId: ID!): [RecipientReadInfo]
   }
 
   type Mutation {
@@ -168,6 +176,29 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
+    recipientsWhoReadEmail: async (_: any, { campaignId }: any, context: { user: any }) => {
+      checkAuth(context);
+  
+      const campaignResult = await pool.query(
+        "SELECT id FROM campaigns WHERE id = $1 AND user_id = $2",
+        [campaignId, context.user.id]
+      );
+  
+      if (campaignResult.rowCount === 0) {
+        throw new Error("Campaign not found or not authorized");
+      }
+  
+      const result = await pool.query(
+        `SELECT email_address, COUNT(*) as read_count
+         FROM recipient_emails
+         WHERE campaign_id = $1 AND read = true
+         GROUP BY email_address`,
+        [campaignId]
+      );
+  
+      return result.rows;
+    },
+  },
     emailTemplate: async (_: any, { id }: any, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query(
@@ -214,7 +245,7 @@ const resolvers = {
       }
 
       const templateId = campaignResult.rows[0].email_template_id;
-      console.log({ campaign: campaignResult.rows[0] })
+      console.log({ campaign: campaignResult.rows[0] });
 
       const result = await pool.query(
         "SELECT * FROM email_templates WHERE id = $1 AND user_id = $2",
@@ -441,8 +472,8 @@ const resolvers = {
         query = `
         INSERT INTO recipient_emails (campaign_id, email_address)
         VALUES ${email_addresses
-            .map((_: any, i: number) => `($1, $${i + 2})`)
-            .join(", ")}
+          .map((_: any, i: number) => `($1, $${i + 2})`)
+          .join(", ")}
         ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
         RETURNING *;
         `;

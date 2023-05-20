@@ -45,7 +45,6 @@ const updateEmailStatus = async (emailId: string) => {
 // tracking endpoint but renamed to newsletter-image so that gmail doesn't block it
 app.get("/newsletter-image/:recipientEmailId", async (req, res) => {
   let emailId = req.params.recipientEmailId;
-  emailId = emailId.replace(":", "");
 
   console.log({ emailId });
 

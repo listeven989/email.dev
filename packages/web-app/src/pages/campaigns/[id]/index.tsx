@@ -21,8 +21,6 @@ import {
   Tbody,
   Td,
 } from "@chakra-ui/react";
-import ViewTemplate from "@/components/ViewTemplate";
-import { useEffect } from "react";
 
 export const GET_CAMPAIGN = gql`
   query GetCampaign($id: ID!) {
@@ -35,12 +33,6 @@ export const GET_CAMPAIGN = gql`
       status
       created_at
       updated_at
-      recipientEmails {
-        id
-        email_address
-        read
-        read_at
-      }
     }
     emailTemplateByCampaignId(campaignId: $id) {
       id
@@ -48,6 +40,10 @@ export const GET_CAMPAIGN = gql`
       subject
       text_content
       html_content
+    }
+    recipientsWhoReadEmail(campaignId: $id) {
+      email_address
+      read_count
     }
   }
 `;
@@ -59,22 +55,12 @@ const Campaign = () => {
   const { loading, error, data } = useQuery(GET_CAMPAIGN, {
     variables: { id },
   });
-
-  // Add this function to the component
-  const openedEmails = () => {
-    const opened = data.campaign.recipientEmails.filter(
-      (recipient: any) => recipient.read
-    );
-    return opened;
-  };
-
-  const totalOpened = openedEmails().length;
-
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
   if (!data) return null;
 
   const campaign = data.campaign;
+  const totalOpened = data.recipientsWhoReadEmail.length;
 
   return (
     <Container maxW="container.md" py={12}>
@@ -151,14 +137,14 @@ const Campaign = () => {
               <Thead>
                 <Tr>
                   <Th>Email Address</Th>
-                  <Th>Opened At</Th>
+                  <Th>Read Count</Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {openedEmails().map((recipient: any) => (
-                  <Tr key={recipient.id}>
+                {data.recipientsWhoReadEmail.map((recipient: any) => (
+                  <Tr key={recipient.email_address}>
                     <Td>{recipient.email_address}</Td>
-                    <Td>{new Date(recipient.read_at).toLocaleString()}</Td>
+                    <Td>{recipient.read_count}</Td>
                   </Tr>
                 ))}
               </Tbody>

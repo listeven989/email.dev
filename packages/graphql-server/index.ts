@@ -81,7 +81,7 @@ const typeDefs = gql`
     sent_at: String
     created_at: String!
     updated_at: String!
-    read: Boolean!
+    read: Int!
     read_at: String!
   }
 
@@ -188,17 +188,16 @@ const resolvers = {
         throw new Error("Campaign not found or not authorized");
       }
   
+      // read greater than 0
       const result = await pool.query(
-        `SELECT email_address, COUNT(*) as read_count
+        `SELECT email_address, read as read_count
          FROM recipient_emails
-         WHERE campaign_id = $1 AND read = true
-         GROUP BY email_address`,
+         WHERE campaign_id = $1 AND read > 0`,
         [campaignId]
       );
   
       return result.rows;
     },
-  },
     emailTemplate: async (_: any, { id }: any, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query(
@@ -213,7 +212,6 @@ const resolvers = {
 
       return emailTemplate;
     },
-
     campaign: async (_: any, { id }: any, context: { user: any }) => {
       checkAuth(context);
       const result = await pool.query(
@@ -259,7 +257,6 @@ const resolvers = {
 
       return emailTemplate;
     },
-
     recipientEmails: async (
       _: any,
       { campaignId }: any,

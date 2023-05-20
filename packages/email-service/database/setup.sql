@@ -189,3 +189,4 @@ END;
 -- Drop the read_old column
 ALTER TABLE recipient_emails
 DROP COLUMN read_old;
+

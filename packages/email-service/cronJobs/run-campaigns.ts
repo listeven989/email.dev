@@ -115,7 +115,7 @@ async function sendCampaignEmails() {
           htmlContent.append(trackingPixelLink);
         }
 
-        // console.log({ htmlContent });
+        console.log({ htmlContent });
 
         if (campaign.html_content && campaign.text_content) {
           sendMailOpts["html"] = htmlContent;
@@ -183,9 +183,31 @@ async function sendCampaignEmails() {
   }
 }
 
+const CRON_LANG = "* * * * *";
+
 // Schedule the cron job to run every minute
 cron.schedule("* * * * *", () => {
-  console.log("Running email sender cron job every minute");
+  // Get date time in PDT time
+  const now = new Date();
+  const pdtDateTime = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    dateStyle: "full",
+    timeStyle: "long",
+  }).format(now);
+
+  // Convert CRON expression to human readable
+  const cronExpression = "* * * * *";
+  const humanReadableCron = cronstrue.toString(cronExpression);
+
+  console.log(`${pdtDateTime}: Running email sender cron job ${humanReadableCron}`);
+
+  // log TRACKING_SERVICE_URL
+  if (!process.env.TRACKING_SERVICE_URL) {
+    throw new Error(
+      "TRACKING_SERVICE_URL environment variable must be set to run this cron"
+    )
+  }
+
   sendCampaignEmails()
     .then(() => {
       console.log("Finished sending emails for this minute");

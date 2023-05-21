@@ -29,22 +29,34 @@ async function sendCampaignEmails() {
     const emailsToSend = campaign.daily_limit - campaign.emails_sent_today;
     if (emailsToSend <= 0) {
       console.log("Campaign limit reached moving to next campaign.");
-      continue
-    };
+      continue;
+    }
 
     const recipients = await getRecipients(client, campaign.campaign_id);
     const transporter = createTransport(getTransporterConfig(campaign));
 
+    let errorOccurred = false;
     let delay = 0;
     for (const recipient of recipients) {
-      console.log("Campiagn id: ", campaign.campaign_id, " / ", "Sending email to: ", recipient.email_address);
+      console.log(
+        "Campiagn id: ",
+        campaign.campaign_id,
+        " / ",
+        "Sending email to: ",
+        recipient.email_address
+      );
 
       try {
-        const sendMailOpts = await getSendMailOptions(client, campaign, recipient);
+        const sendMailOpts = await getSendMailOptions(
+          client,
+          campaign,
+          recipient
+        );
         await transporter.sendMail(sendMailOpts);
       } catch (error) {
         console.error(error);
-        continue;
+        errorOccurred = true;
+        break;
       }
 
       await incrementEmailsSentToday(client, campaign.campaign_id);
@@ -54,7 +66,16 @@ async function sendCampaignEmails() {
       delay = delay === 0 ? 1000 : delay * 2;
     }
 
-    const unsentEmailsCount = await getUnsentEmailsCount(client, campaign.campaign_id);
+    if (errorOccurred) {
+      await pauseCampaignOnError(client, campaign.campaign_id, campaign.name);
+      console.log(`Paused campaign ${campaign.campaign_id} due to an error.`);
+      continue;
+    }
+
+    const unsentEmailsCount = await getUnsentEmailsCount(
+      client,
+      campaign.campaign_id
+    );
     if (unsentEmailsCount === 0) {
       await updateCampaignStatus(client, campaign.campaign_id);
     }
@@ -75,7 +96,11 @@ function getTransporterConfig(campaign: any) {
   };
 }
 
-async function getSendMailOptions(client: Client, campaign: any, recipient: any) {
+async function getSendMailOptions(
+  client: Client,
+  campaign: any,
+  recipient: any
+) {
   const sendMailOpts: any = {
     from: `${campaign.display_name} <${campaign.from_email}>`,
     to: recipient.email_address,
@@ -163,11 +188,24 @@ async function updateRecipientEmails(client: Client, recipient: any) {
     UPDATE recipient_emails
     SET sent = true, sent_at = NOW()
     WHERE email_address = $1 AND campaign_id = $2
+    RETURNING sent, sent_at
   `;
-  await client.query(updateRecipientEmailsQuery, [
+  const result = await client.query(updateRecipientEmailsQuery, [
     recipient.email_address,
     recipient.campaign_id,
   ]);
+
+  console.log("Update recipient emails query result:", result);
+
+  if (
+    result.rowCount === 0 ||
+    !result.rows[0].sent ||
+    result.rows[0].sent_at === null
+  ) {
+    throw new Error(
+      `Failed to update sent and sent_at for recipient: ${recipient.email_address}`
+    );
+  }
 }
 
 async function getUnsentEmailsCount(client: Client, campaignId: number) {
@@ -176,7 +214,9 @@ async function getUnsentEmailsCount(client: Client, campaignId: number) {
     FROM recipient_emails
     WHERE campaign_id = $1 AND sent = false
   `;
-  const unsentEmailsResult = await client.query(unsentEmailsQuery, [campaignId]);
+  const unsentEmailsResult = await client.query(unsentEmailsQuery, [
+    campaignId,
+  ]);
   return parseInt(unsentEmailsResult.rows[0].count);
 }
 
@@ -189,8 +229,22 @@ async function updateCampaignStatus(client: Client, campaignId: number) {
   await client.query(updateCampaignStatusQuery, [campaignId]);
 }
 
-const CRON_LANG = "* * * * *";
-cron.schedule(CRON_LANG, () => {
+async function pauseCampaignOnError(
+  client: Client,
+  campaignId: number,
+  campaignName: string
+) {
+  const updateCampaignQuery = `
+    UPDATE campaigns
+    SET status = 'paused', name = $1
+    WHERE id = $2
+  `;
+  await client.query(updateCampaignQuery, [
+    `${campaignName} - AUTO PAUSED DUE TO ERROR`,
+    campaignId,
+  ]);
+}
+
 const CRON_SCHEDULE =
   process.env.ENVIRONMENT === "prod" ? "0 * * * *" : "* * * * *";
 

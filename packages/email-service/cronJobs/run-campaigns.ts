@@ -83,7 +83,7 @@ async function sendCampaignEmails() {
       // Send the email to each recipient
       for (const recipient of recipients) {
         console.log("Preparing to send email to " + recipient.email_address);
-  
+
         const sendMailOpts: any = {
           from: `${campaign.display_name} <${campaign.from_email}>`,
           to: recipient.email_address,
@@ -95,19 +95,21 @@ async function sendCampaignEmails() {
         const $ = cheerio.load(campaign.html_content);
 
         // replace all links in the html content with tracking links
-        const links = $('a');
+        const links = $("a");
 
         for (let i = 0; i < links.length; i++) {
           const link = links[i];
-          const originalUrl = $(link).attr('href');
+          const originalUrl = $(link).attr("href");
 
           const query = `INSERT INTO link_clicks (url, recipient_email_id) VALUES ($1, $2) RETURNING id`;
           const result = await client.query(query, [originalUrl, recipient.id]);
           const linkClickId = result.rows[0].id;
 
-          $(link).attr('href', `${process.env.TRACKING_SERVICE_URL}/link/:${linkClickId}`);
+          $(link).attr(
+            "href",
+            `${process.env.TRACKING_SERVICE_URL}/link/:${linkClickId}`
+          );
         }
-
 
         // add the tracking pixel link into the html content
         let htmlContent = campaign.html_content;
@@ -190,7 +192,7 @@ async function sendCampaignEmails() {
 const CRON_LANG = "* * * * *";
 
 // Schedule the cron job to run every minute
-cron.schedule("* * * * *", () => {
+cron.schedule(CRON_LANG, () => {
   // Get date time in PDT time
   const now = new Date();
   const pdtDateTime = new Intl.DateTimeFormat("en-US", {
@@ -203,13 +205,15 @@ cron.schedule("* * * * *", () => {
   const cronExpression = "* * * * *";
   const humanReadableCron = cronstrue.toString(cronExpression);
 
-  console.log(`${pdtDateTime}: Running email sender cron job ${humanReadableCron}`);
+  console.log(
+    `${pdtDateTime}: Running email sender cron job ${humanReadableCron}`
+  );
 
   // log TRACKING_SERVICE_URL
   if (!process.env.TRACKING_SERVICE_URL) {
     throw new Error(
       "TRACKING_SERVICE_URL environment variable must be set to run this cron"
-    )
+    );
   }
 
   sendCampaignEmails()

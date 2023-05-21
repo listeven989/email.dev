@@ -26,37 +26,51 @@ async function sendCampaignEmails() {
   for (const campaign of campaigns) {
     console.log("Starting campaign: ", campaign.campaign_id);
 
-    const emailsToSend = campaign.daily_limit - campaign.emails_sent_today;
-    if (emailsToSend <= 0) {
-      console.log("Campaign limit reached moving to next campaign.");
-      continue
-    };
-
-    const recipients = await getRecipients(client, campaign.campaign_id);
-    const transporter = createTransport(getTransporterConfig(campaign));
-
-    let delay = 0;
-    for (const recipient of recipients) {
-      console.log("Campiagn id: ", campaign.campaign_id, " / ", "Sending email to: ", recipient.email_address);
-
-      try {
-        const sendMailOpts = await getSendMailOptions(client, campaign, recipient);
-        await transporter.sendMail(sendMailOpts);
-      } catch (error) {
-        console.error(error);
+    try {
+      const emailsToSend = campaign.daily_limit - campaign.emails_sent_today;
+      if (emailsToSend <= 0) {
+        console.log("Campaign limit reached moving to next campaign.");
         continue;
       }
 
-      await incrementEmailsSentToday(client, campaign.campaign_id);
-      await updateRecipientEmails(client, recipient);
+      const recipients = await getRecipients(client, campaign.campaign_id);
+      const transporter = createTransport(getTransporterConfig(campaign));
 
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      delay = delay === 0 ? 1000 : delay * 2;
-    }
+      let errorOccurred = false;
+      let delay = 0;
+      for (const recipient of recipients) {
+        console.log(
+          "Campiagn id: ",
+          campaign.campaign_id,
+          " / ",
+          "Sending email to: ",
+          recipient.email_address
+        );
 
-    const unsentEmailsCount = await getUnsentEmailsCount(client, campaign.campaign_id);
-    if (unsentEmailsCount === 0) {
-      await updateCampaignStatus(client, campaign.campaign_id);
+        const sendMailOpts = await getSendMailOptions(
+          client,
+          campaign,
+          recipient
+        );
+        await transporter.sendMail(sendMailOpts);
+
+        await incrementEmailsSentToday(client, campaign.campaign_id);
+        await updateRecipientEmails(client, recipient.email_address, campaign.campaign_id);
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        delay = delay === 0 ? 1000 : delay * 2;
+      }
+
+      const unsentEmailsCount = await getUnsentEmailsCount(
+        client,
+        campaign.campaign_id
+      );
+      if (unsentEmailsCount === 0) {
+        await updateCampaignStatus(client, campaign.campaign_id);
+      }
+    } catch (error) {
+      console.error(`An error occurred during campaign ${campaign.campaign_id}:`, error);
+      await pauseCampaignOnError(client, campaign.campaign_id, campaign.name);
     }
   }
 
@@ -75,7 +89,11 @@ function getTransporterConfig(campaign: any) {
   };
 }
 
-async function getSendMailOptions(client: Client, campaign: any, recipient: any) {
+async function getSendMailOptions(
+  client: Client,
+  campaign: any,
+  recipient: any
+) {
   const sendMailOpts: any = {
     from: `${campaign.display_name} <${campaign.from_email}>`,
     to: recipient.email_address,
@@ -154,20 +172,44 @@ async function incrementEmailsSentToday(client: Client, campaignId: number) {
     UPDATE campaigns
     SET emails_sent_today = emails_sent_today + 1
     WHERE id = $1
+    RETURNING *
   `;
-  await client.query(updateEmailsSentTodayQuery, [campaignId]);
+  const result = await client.query(updateEmailsSentTodayQuery, [campaignId]);
+
+  if (
+    result.rowCount === 0 ||
+    result.rows[0].emails_sent_today === null
+  ) {
+    throw new Error(
+      `Failed to increment emails_sent_today for campaign: ${campaignId}`
+    );
+  }
 }
 
-async function updateRecipientEmails(client: Client, recipient: any) {
+// TODO: update the email_address to be email_account_id
+async function updateRecipientEmails(client: Client, email_address: string, campaign_id: number) {
   const updateRecipientEmailsQuery = `
     UPDATE recipient_emails
     SET sent = true, sent_at = NOW()
     WHERE email_address = $1 AND campaign_id = $2
+    RETURNING sent, sent_at
   `;
-  await client.query(updateRecipientEmailsQuery, [
-    recipient.email_address,
-    recipient.campaign_id,
+  const result = await client.query(updateRecipientEmailsQuery, [
+    email_address,
+    campaign_id,
   ]);
+
+  console.log("Update recipient emails query result:", result);
+
+  if (
+    result.rowCount === 0 ||
+    !result.rows[0].sent ||
+    result.rows[0].sent_at === null
+  ) {
+    throw new Error(
+      `Failed to update sent and sent_at for recipient: ${email_address}`
+    );
+  }
 }
 
 async function getUnsentEmailsCount(client: Client, campaignId: number) {
@@ -176,7 +218,9 @@ async function getUnsentEmailsCount(client: Client, campaignId: number) {
     FROM recipient_emails
     WHERE campaign_id = $1 AND sent = false
   `;
-  const unsentEmailsResult = await client.query(unsentEmailsQuery, [campaignId]);
+  const unsentEmailsResult = await client.query(unsentEmailsQuery, [
+    campaignId,
+  ]);
   return parseInt(unsentEmailsResult.rows[0].count);
 }
 
@@ -185,12 +229,37 @@ async function updateCampaignStatus(client: Client, campaignId: number) {
     UPDATE campaigns
     SET status = 'completed'
     WHERE id = $1
+    RETURNING *
   `;
-  await client.query(updateCampaignStatusQuery, [campaignId]);
+  const result = await client.query(updateCampaignStatusQuery, [campaignId]);
+
+  if (
+    result.rowCount === 0 ||
+    !result.rows[0].status ||
+    result.rows[0].status !== 'completed'
+  ) {
+    throw new Error(
+      `Failed to update status to 'completed' for campaign: ${campaignId}`
+    );
+  }
 }
 
-const CRON_LANG = "* * * * *";
-cron.schedule(CRON_LANG, () => {
+async function pauseCampaignOnError(
+  client: Client,
+  campaignId: number,
+  campaignName: string
+) {
+  const updateCampaignQuery = `
+    UPDATE campaigns
+    SET status = 'paused', name = $1
+    WHERE id = $2
+  `;
+  await client.query(updateCampaignQuery, [
+    `${campaignName} - AUTO PAUSED DUE TO ERROR`,
+    campaignId,
+  ]);
+}
+
 const CRON_SCHEDULE =
   process.env.ENVIRONMENT === "prod" ? "0 * * * *" : "* * * * *";
 

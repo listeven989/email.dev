@@ -488,6 +488,12 @@ const resolvers = {
       // Execute the query
       const result = await pool.query(query, values);
 
+      // Change the campaign back to active
+      await pool.query(
+        "UPDATE campaigns SET status = 'active' WHERE id = $1",
+        [campaign_id]
+      )
+
       // Return the inserted rows
       return result.rows;
     },

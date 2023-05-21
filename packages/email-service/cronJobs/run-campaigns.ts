@@ -51,7 +51,10 @@ async function sendCampaignEmails() {
     // Process each campaign
     for (const campaign of campaigns) {
       // Calculate the number of emails to send for the current campaign
-      const emailsToSend = campaign.daily_limit - campaign.emails_sent_today;
+      const emailsToSend = Math.min(
+        campaign.daily_limit - campaign.emails_sent_today,
+        1
+      );
 
       // Get recipient emails for the current campaign (with emails_sent_today < emailsToSend)
       const recipientsQuery = `

@@ -8,3 +8,10 @@ packages/tracking-service/.env
 
 # misc
 .DS_Store
+
+# code search tools
+find_and_format.sh 
+generate_mermaid_chart.sh
+helper_prompt.md
+
+mermaid_chart.md

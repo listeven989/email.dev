@@ -60,7 +60,7 @@ async function sendCampaignEmails() {
       }
 
       await incrementEmailsSentToday(client, campaign.campaign_id);
-      await updateRecipientEmails(client, recipient);
+      await updateRecipientEmails(client, recipient.email_address, campaign.campaign_id);
 
       await new Promise((resolve) => setTimeout(resolve, delay));
       delay = delay === 0 ? 1000 : delay * 2;
@@ -183,7 +183,7 @@ async function incrementEmailsSentToday(client: Client, campaignId: number) {
   await client.query(updateEmailsSentTodayQuery, [campaignId]);
 }
 
-async function updateRecipientEmails(client: Client, recipient: any) {
+async function updateRecipientEmails(client: Client, email_address: string, campaign_id: number) {
   const updateRecipientEmailsQuery = `
     UPDATE recipient_emails
     SET sent = true, sent_at = NOW()
@@ -191,8 +191,8 @@ async function updateRecipientEmails(client: Client, recipient: any) {
     RETURNING sent, sent_at
   `;
   const result = await client.query(updateRecipientEmailsQuery, [
-    recipient.email_address,
-    recipient.campaign_id,
+    email_address,
+    campaign_id,
   ]);
 
   console.log("Update recipient emails query result:", result);
@@ -203,7 +203,7 @@ async function updateRecipientEmails(client: Client, recipient: any) {
     result.rows[0].sent_at === null
   ) {
     throw new Error(
-      `Failed to update sent and sent_at for recipient: ${recipient.email_address}`
+      `Failed to update sent and sent_at for recipient: ${email_address}`
     );
   }
 }

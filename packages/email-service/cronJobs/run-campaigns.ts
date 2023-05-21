@@ -26,58 +26,51 @@ async function sendCampaignEmails() {
   for (const campaign of campaigns) {
     console.log("Starting campaign: ", campaign.campaign_id);
 
-    const emailsToSend = campaign.daily_limit - campaign.emails_sent_today;
-    if (emailsToSend <= 0) {
-      console.log("Campaign limit reached moving to next campaign.");
-      continue;
-    }
+    try {
+      const emailsToSend = campaign.daily_limit - campaign.emails_sent_today;
+      if (emailsToSend <= 0) {
+        console.log("Campaign limit reached moving to next campaign.");
+        continue;
+      }
 
-    const recipients = await getRecipients(client, campaign.campaign_id);
-    const transporter = createTransport(getTransporterConfig(campaign));
+      const recipients = await getRecipients(client, campaign.campaign_id);
+      const transporter = createTransport(getTransporterConfig(campaign));
 
-    let errorOccurred = false;
-    let delay = 0;
-    for (const recipient of recipients) {
-      console.log(
-        "Campiagn id: ",
-        campaign.campaign_id,
-        " / ",
-        "Sending email to: ",
-        recipient.email_address
-      );
+      let errorOccurred = false;
+      let delay = 0;
+      for (const recipient of recipients) {
+        console.log(
+          "Campiagn id: ",
+          campaign.campaign_id,
+          " / ",
+          "Sending email to: ",
+          recipient.email_address
+        );
 
-      try {
         const sendMailOpts = await getSendMailOptions(
           client,
           campaign,
           recipient
         );
         await transporter.sendMail(sendMailOpts);
-      } catch (error) {
-        console.error(error);
-        errorOccurred = true;
-        break;
+
+        await incrementEmailsSentToday(client, campaign.campaign_id);
+        await updateRecipientEmails(client, recipient.email_address, campaign.campaign_id);
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        delay = delay === 0 ? 1000 : delay * 2;
       }
 
-      await incrementEmailsSentToday(client, campaign.campaign_id);
-      await updateRecipientEmails(client, recipient.email_address, campaign.campaign_id);
-
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      delay = delay === 0 ? 1000 : delay * 2;
-    }
-
-    if (errorOccurred) {
+      const unsentEmailsCount = await getUnsentEmailsCount(
+        client,
+        campaign.campaign_id
+      );
+      if (unsentEmailsCount === 0) {
+        await updateCampaignStatus(client, campaign.campaign_id);
+      }
+    } catch (error) {
+      console.error(`An error occurred during campaign ${campaign.campaign_id}:`, error);
       await pauseCampaignOnError(client, campaign.campaign_id, campaign.name);
-      console.log(`Paused campaign ${campaign.campaign_id} due to an error.`);
-      continue;
-    }
-
-    const unsentEmailsCount = await getUnsentEmailsCount(
-      client,
-      campaign.campaign_id
-    );
-    if (unsentEmailsCount === 0) {
-      await updateCampaignStatus(client, campaign.campaign_id);
     }
   }
 

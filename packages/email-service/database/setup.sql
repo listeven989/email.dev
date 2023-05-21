@@ -218,3 +218,15 @@ BEGIN
     ADD COLUMN archive BOOLEAN NOT NULL DEFAULT FALSE;
   END IF;
 END $$;
+
+-- Add a cron_lock table to prevent double concurent writes to the database on multiple 
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'cron_lock') THEN
+    CREATE TABLE cron_lock (
+      id SERIAL PRIMARY KEY,
+      environment VARCHAR(255) NOT NULL,
+      locked_at TIMESTAMP NOT NULL
+    );
+  END IF;
+END $$;

@@ -22,6 +22,13 @@ async function sendCampaignEmails() {
   const client = new Client(connectionString);
   await client.connect();
 
+  // Acquire the lock
+  const environment = process.env.ENVIRONMENT;
+  if (!environment) {
+    throw new Error("ENVIRONMENT not set");
+  }
+  const lock = await acquireLock(client, environment);
+
   const campaigns = await getCampaigns(client);
   for (const campaign of campaigns) {
     console.log("Starting campaign: ", campaign.campaign_id);
@@ -55,7 +62,11 @@ async function sendCampaignEmails() {
         await transporter.sendMail(sendMailOpts);
 
         await incrementEmailsSentToday(client, campaign.campaign_id);
-        await updateRecipientEmails(client, recipient.email_address, campaign.campaign_id);
+        await updateRecipientEmails(
+          client,
+          recipient.email_address,
+          campaign.campaign_id
+        );
 
         await new Promise((resolve) => setTimeout(resolve, delay));
         delay = delay === 0 ? 1000 : delay * 2;
@@ -69,11 +80,15 @@ async function sendCampaignEmails() {
         await updateCampaignStatus(client, campaign.campaign_id);
       }
     } catch (error) {
-      console.error(`An error occurred during campaign ${campaign.campaign_id}:`, error);
+      console.error(
+        `An error occurred during campaign ${campaign.campaign_id}:`,
+        error
+      );
       await pauseCampaignOnError(client, campaign.campaign_id, campaign.name);
     }
   }
 
+  await releaseLock(client, lock.id);
   await client.end();
 }
 
@@ -176,10 +191,7 @@ async function incrementEmailsSentToday(client: Client, campaignId: number) {
   `;
   const result = await client.query(updateEmailsSentTodayQuery, [campaignId]);
 
-  if (
-    result.rowCount === 0 ||
-    result.rows[0].emails_sent_today === null
-  ) {
+  if (result.rowCount === 0 || result.rows[0].emails_sent_today === null) {
     throw new Error(
       `Failed to increment emails_sent_today for campaign: ${campaignId}`
     );
@@ -187,7 +199,11 @@ async function incrementEmailsSentToday(client: Client, campaignId: number) {
 }
 
 // TODO: update the email_address to be email_account_id
-async function updateRecipientEmails(client: Client, email_address: string, campaign_id: number) {
+async function updateRecipientEmails(
+  client: Client,
+  email_address: string,
+  campaign_id: number
+) {
   const updateRecipientEmailsQuery = `
     UPDATE recipient_emails
     SET sent = true, sent_at = NOW()
@@ -236,7 +252,7 @@ async function updateCampaignStatus(client: Client, campaignId: number) {
   if (
     result.rowCount === 0 ||
     !result.rows[0].status ||
-    result.rows[0].status !== 'completed'
+    result.rows[0].status !== "completed"
   ) {
     throw new Error(
       `Failed to update status to 'completed' for campaign: ${campaignId}`
@@ -258,6 +274,36 @@ async function pauseCampaignOnError(
     `${campaignName} - AUTO PAUSED DUE TO ERROR`,
     campaignId,
   ]);
+}
+
+async function acquireLock(client: Client, environment: string) {
+  const checkLockQuery = `
+    SELECT environment FROM cron_lock
+  `;
+  const checkLockResult = await client.query(checkLockQuery);
+
+  if (checkLockResult.rowCount > 0) {
+    const lockedEnvironment = checkLockResult.rows[0].environment;
+    throw new Error(
+      `Lock already acquired by environment: ${lockedEnvironment}`
+    );
+  }
+
+  const lockQuery = `
+    INSERT INTO cron_lock (environment, locked_at)
+    VALUES ($1, NOW())
+    RETURNING *
+  `;
+  const result = await client.query(lockQuery, [environment]);
+  return result.rows[0];
+}
+
+async function releaseLock(client: Client, lockId: string) {
+  const unlockQuery = `
+    DELETE FROM cron_lock
+    WHERE id = $1
+  `;
+  await client.query(unlockQuery, [lockId]);
 }
 
 const CRON_SCHEDULE =

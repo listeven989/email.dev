@@ -193,6 +193,7 @@ async function incrementEmailsSentToday(client: Client, campaignId: number) {
   }
 }
 
+// TODO: update the email_address to be email_account_id
 async function updateRecipientEmails(client: Client, email_address: string, campaign_id: number) {
   const updateRecipientEmailsQuery = `
     UPDATE recipient_emails

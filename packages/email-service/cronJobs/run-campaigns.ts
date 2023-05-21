@@ -179,8 +179,18 @@ async function incrementEmailsSentToday(client: Client, campaignId: number) {
     UPDATE campaigns
     SET emails_sent_today = emails_sent_today + 1
     WHERE id = $1
+    RETURNING *
   `;
-  await client.query(updateEmailsSentTodayQuery, [campaignId]);
+  const result = await client.query(updateEmailsSentTodayQuery, [campaignId]);
+
+  if (
+    result.rowCount === 0 ||
+    result.rows[0].emails_sent_today === null
+  ) {
+    throw new Error(
+      `Failed to increment emails_sent_today for campaign: ${campaignId}`
+    );
+  }
 }
 
 async function updateRecipientEmails(client: Client, email_address: string, campaign_id: number) {
@@ -225,8 +235,19 @@ async function updateCampaignStatus(client: Client, campaignId: number) {
     UPDATE campaigns
     SET status = 'completed'
     WHERE id = $1
+    RETURNING *
   `;
-  await client.query(updateCampaignStatusQuery, [campaignId]);
+  const result = await client.query(updateCampaignStatusQuery, [campaignId]);
+
+  if (
+    result.rowCount === 0 ||
+    !result.rows[0].status ||
+    result.rows[0].status !== 'completed'
+  ) {
+    throw new Error(
+      `Failed to update status to 'completed' for campaign: ${campaignId}`
+    );
+  }
 }
 
 async function pauseCampaignOnError(

@@ -191,6 +191,10 @@ async function updateCampaignStatus(client: Client, campaignId: number) {
 
 const CRON_LANG = "* * * * *";
 cron.schedule(CRON_LANG, () => {
+const CRON_SCHEDULE =
+  process.env.ENVIRONMENT === "prod" ? "0 * * * *" : "* * * * *";
+
+cron.schedule(CRON_SCHEDULE, () => {
   const now = new Date();
   const pdtDateTime = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Los_Angeles",
@@ -198,7 +202,7 @@ cron.schedule(CRON_LANG, () => {
     timeStyle: "long",
   }).format(now);
 
-  const humanReadableCron = cronstrue.toString(CRON_LANG);
+  const humanReadableCron = cronstrue.toString(CRON_SCHEDULE);
   console.log(
     `${pdtDateTime}: Running email sender cron job ${humanReadableCron}`
   );

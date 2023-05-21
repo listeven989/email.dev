@@ -527,9 +527,9 @@ const resolvers = {
       // Execute the query
       const result = await pool.query(query, values);
 
-      // Change the campaign back to paused if the status is complete
+      // Change the campaign back to paused if the status is completed
       await pool.query(
-        "UPDATE campaigns SET status = 'paused' WHERE id = $1 AND status = 'complete'",
+        "UPDATE campaigns SET status = 'paused' WHERE id = $1 AND status = 'completed'",
         [campaign_id]
       );
 

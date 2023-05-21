@@ -40,10 +40,9 @@ async function sendCampaignEmails() {
         continue;
       }
 
-      const recipients = await getRecipients(client, campaign.campaign_id);
+      const recipients = await getRecipients(client, campaign.campaign_id, emailsToSend);
       const transporter = createTransport(getTransporterConfig(campaign));
 
-      let errorOccurred = false;
       let delay = 0;
       for (const recipient of recipients) {
         console.log(
@@ -69,7 +68,7 @@ async function sendCampaignEmails() {
         );
 
         await new Promise((resolve) => setTimeout(resolve, delay));
-        delay = delay === 0 ? 1000 : delay * 2;
+        delay = delay === 0 ? 1000 : delay * 15;
       }
 
       const unsentEmailsCount = await getUnsentEmailsCount(
@@ -171,14 +170,15 @@ async function getCampaigns(client: Client) {
   return campaignsResult.rows;
 }
 
-async function getRecipients(client: Client, campaignId: number) {
+async function getRecipients(client: Client, campaignId: number, maxToSend: number) {
   const recipientsQuery = `
     SELECT recipient_emails.id, recipient_emails.email_address
     FROM recipient_emails
     JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
     WHERE recipient_emails.campaign_id = $1 AND recipient_emails.sent = false
+    LIMIT $2
   `;
-  const recipientsResult = await client.query(recipientsQuery, [campaignId]);
+  const recipientsResult = await client.query(recipientsQuery, [campaignId, maxToSend]);
   return recipientsResult.rows;
 }
 
@@ -214,8 +214,6 @@ async function updateRecipientEmails(
     email_address,
     campaign_id,
   ]);
-
-  console.log("Update recipient emails query result:", result);
 
   if (
     result.rowCount === 0 ||
@@ -318,6 +316,7 @@ cron.schedule(CRON_SCHEDULE, () => {
   }).format(now);
 
   const humanReadableCron = cronstrue.toString(CRON_SCHEDULE);
+  console.log("\n\n\n\n");
   console.log(
     `${pdtDateTime}: Running email sender cron job ${humanReadableCron}`
   );

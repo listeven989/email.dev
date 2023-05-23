@@ -53,6 +53,17 @@ export const GET_CAMPAIGN = gql`
   }
 `;
 
+const truncateText = (text: string, maxLength = 30) => {
+  if (text.length > maxLength) {
+    return text.slice(0, maxLength) + "...";
+  }
+  return text;
+};
+
+const handleClick = (url: string) => {
+  window.open(url, "_blank");
+};
+
 const Campaign = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -194,7 +205,10 @@ const Campaign = () => {
                 {data.linkClicksByCampaign.map((linkClick: any) => (
                   <Tr key={linkClick.id}>
                     {/* <Td>{linkClick.recipient_email.emailAddress}</Td> */}
-                    <Td>{linkClick.url}</Td>
+                    {/* TODO: for long text just do a ... and make the link clickable */}
+                    <Td onClick={() => handleClick(linkClick.url)} style={{color: "blue", cursor: "pointer"}}>
+                      {truncateText(linkClick.url)}
+                    </Td>
                     <Td>{linkClick.click_count}</Td>
                     <Td>
                       {new Date(linkClick.recipientEmail).toLocaleString()}

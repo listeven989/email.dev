@@ -45,6 +45,11 @@ export const GET_CAMPAIGN = gql`
       email_address
       read_count
     }
+    linkClicksByCampaign(campaignId: $id) {
+      id
+      click_count
+      url
+    }
   }
 `;
 
@@ -103,26 +108,26 @@ const Campaign = () => {
                 <Text>{campaign.reply_to_email_address || "n/a"}</Text>
               </Box>
             </SimpleGrid>
+            <Stack direction="row" spacing={4} marginTop={6}>
+              <Link href={`/campaigns/${id}/edit`} passHref>
+                <Button as="a" colorScheme="blue" variant="solid">
+                  Edit Campaign
+                </Button>
+              </Link>
+              <Link href={`/campaigns/${id}/email-template`} passHref>
+                <Button as="a" colorScheme="blue" variant="solid">
+                  View / Edit Email Template
+                </Button>
+              </Link>
+              <Link href={`/campaigns/${id}/recipients`} passHref>
+                <Button as="a" colorScheme="blue" variant="solid">
+                  Add / Edit Recipients
+                </Button>
+              </Link>
+            </Stack>
           </Box>
-          <Stack direction="row" spacing={4}>
-            <Link href={`/campaigns/${id}/edit`} passHref>
-              <Button as="a" colorScheme="blue" variant="outline">
-                Edit Campaign
-              </Button>
-            </Link>
-            <Link href={`/campaigns/${id}/email-template`} passHref>
-              <Button as="a" colorScheme="blue" variant="outline">
-                View / Edit Email Template
-              </Button>
-            </Link>
-            <Link href={`/campaigns/${id}/recipients`} passHref>
-              <Button as="a" colorScheme="blue" variant="outline">
-                Add / Edit Recipients
-              </Button>
-            </Link>
-          </Stack>
           <Heading as="h2" size="md">
-            Recipients who opened their emails ({totalOpened})
+            Recipients who opened their emails
           </Heading>
           <Box
             borderWidth={1}
@@ -149,17 +154,67 @@ const Campaign = () => {
                     <Td>{"not yet available"}</Td>
                   </Tr>
                 ))}
-                
               </Tbody>
-              
             </Table>
-            {
-                  data.recipientsWhoReadEmail.length == 0 && (
-                    <div style={{display: "flex", justifyContent: "center", alignItems: "center", paddingTop: "1rem"}}>
-                      <Text>No recipients opened your emails yet!</Text>
-                    </div>
-                  )
-                }
+            {data.recipientsWhoReadEmail.length == 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingTop: "1rem",
+                }}
+              >
+                <Text>No recipients opened your emails yet!</Text>
+              </div>
+            )}
+          </Box>
+          <Heading as="h2" size="md">
+            Link Clicks
+          </Heading>
+          <Box
+            borderWidth={1}
+            borderRadius="lg"
+            p={6}
+            boxShadow="md"
+            bg="white"
+            w="100%"
+            overflow="auto"
+          >
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  {/* <Th>Email Address</Th> */}
+                  <Th>URL</Th>
+                  <Th>Click Count</Th>
+                  <Th>Clicked At</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {data.linkClicksByCampaign.map((linkClick: any) => (
+                  <Tr key={linkClick.id}>
+                    {/* <Td>{linkClick.recipient_email.emailAddress}</Td> */}
+                    <Td>{linkClick.url}</Td>
+                    <Td>{linkClick.click_count}</Td>
+                    <Td>
+                      {new Date(linkClick.recipientEmail).toLocaleString()}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            {data.linkClicksByCampaign.length == 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingTop: "1rem",
+                }}
+              >
+                <Text>No link clicks yet!</Text>
+              </div>
+            )}
           </Box>
         </VStack>
       ) : (

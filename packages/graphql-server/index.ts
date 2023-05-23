@@ -35,6 +35,13 @@ const typeDefs = gql`
     user: User!
   }
 
+  type LinkClick {
+    id: ID!
+    click_count: Int!
+    url: String!
+    recipient_email: RecipientEmail!
+  }
+
   type EmailAccount {
     id: ID!
     user_id: ID!
@@ -76,7 +83,7 @@ const typeDefs = gql`
   type RecipientEmail {
     id: ID!
     campaign_id: ID!
-    email_address: String!
+    email_address: String
     sent: Boolean!
     sent_at: String
     created_at: String!
@@ -99,6 +106,7 @@ const typeDefs = gql`
     emailTemplateByCampaignId(campaignId: ID!): EmailTemplate
     emailTemplate(id: ID!): EmailTemplate
     recipientsWhoReadEmail(campaignId: ID!): [RecipientReadInfo]
+    linkClicksByCampaign(campaignId: ID!): [LinkClick]
   }
 
   type Mutation {
@@ -323,12 +331,23 @@ const resolvers = {
 
       const query = "SELECT * FROM recipient_emails WHERE campaign_id = $1";
       const result = await checkAuthAndQuery(query, [campaignId], context);
+
       return result.rows;
     },
     emailAccounts: async (_: any, __: any, context: { user: any }) => {
       const query = "SELECT * FROM email_accounts WHERE user_id = $1";
       const result = await checkAuthAndQuery(query, [context.user.id], context);
       return result.rows;
+    },
+    linkClicksByCampaign: async (_: any, { campaignId }: any) => {
+      const query = `
+        SELECT lc.*
+        FROM link_clicks AS lc
+        JOIN recipient_emails AS re ON lc.recipient_email_id = re.id
+        WHERE re.campaign_id = $1
+      `;
+      const { rows } = await pool.query(query, [campaignId]);
+      return rows.filter((row: any) => row.click_count > 0);
     },
   },
   Mutation: {

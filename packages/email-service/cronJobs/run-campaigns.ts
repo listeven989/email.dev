@@ -41,10 +41,31 @@ async function sendCampaignEmails() {
       }
 
       const recipients = await getRecipients(client, campaign.campaign_id, emailsToSend);
-      const transporter = createTransport(getTransporterConfig(campaign));
 
+      // get sender email accounts
+      const emailAccountsQuery = `
+      SELECT 
+      email_accounts.email_address AS from_email,
+      email_accounts.display_name,
+      email_accounts.smtp_host,
+      email_accounts.smtp_port,
+      email_accounts.username,
+      email_accounts.password
+      FROM campaign_email_accounts
+      INNER JOIN email_accounts ON email_accounts.id = campaign_email_accounts.email_account_id
+      WHERE campaign_email_accounts.campaign_id = $1
+      `
+      const emailAccounts = await client.query(emailAccountsQuery, [campaign.campaign_id]);
+
+      
       let delay = 0;
-      for (const recipient of recipients) {
+      for (let i = 0; i < recipients.length; i++) {
+        const recipient = recipients[i];
+
+        const index = i % emailAccounts.rowCount;
+        const emailAccount = emailAccounts.rows[index];
+
+
         console.log(
           "Campiagn id: ",
           campaign.campaign_id,
@@ -53,10 +74,13 @@ async function sendCampaignEmails() {
           recipient.email_address
         );
 
+        const transporter = createTransport(getTransporterConfig(emailAccount));
+
         const sendMailOpts = await getSendMailOptions(
           client,
           campaign,
-          recipient
+          recipient,
+          emailAccount
         );
         await transporter.sendMail(sendMailOpts);
 
@@ -91,14 +115,14 @@ async function sendCampaignEmails() {
   await client.end();
 }
 
-function getTransporterConfig(campaign: any) {
+function getTransporterConfig(emailAccount: any) {
   return {
-    host: campaign.smtp_host,
-    port: campaign.smtp_port,
+    host: emailAccount.smtp_host,
+    port: emailAccount.smtp_port,
     secure: false,
     auth: {
-      user: campaign.username,
-      pass: campaign.password,
+      user: emailAccount.username,
+      pass: emailAccount.password,
     },
   };
 }
@@ -106,10 +130,13 @@ function getTransporterConfig(campaign: any) {
 async function getSendMailOptions(
   client: Client,
   campaign: any,
-  recipient: any
+  recipient: any,
+  emailAccount: any
 ) {
+
+
   const sendMailOpts: any = {
-    from: `${campaign.display_name} <${campaign.from_email}>`,
+    from: `${emailAccount.display_name} <${emailAccount.from_email}>`,
     to: recipient.email_address,
     subject: campaign.subject,
     replyTo: campaign.reply_to_email_address
@@ -156,16 +183,9 @@ async function getCampaigns(client: Client) {
       campaigns.reply_to_email_address,
       email_templates.subject,
       email_templates.text_content,
-      email_templates.html_content,
-      email_accounts.email_address AS from_email,
-      email_accounts.display_name,
-      email_accounts.smtp_host,
-      email_accounts.smtp_port,
-      email_accounts.username,
-      email_accounts.password
+      email_templates.html_content
     FROM campaigns
     JOIN email_templates ON campaigns.email_template_id = email_templates.id
-    JOIN email_accounts ON campaigns.email_account_id = email_accounts.id
     WHERE campaigns.status = 'active' AND campaigns.archive = false
   `;
   const campaignsResult = await client.query(campaignsQuery);

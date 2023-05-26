@@ -305,7 +305,7 @@ async function releaseLock(client: Client, lockId: string) {
 }
 
 const CRON_SCHEDULE =
-  process.env.ENVIRONMENT === "prod" ? "0 * * * *" : "* * * * *";
+  process.env.ENVIRONMENT === "prod" ? "*/5 * * * *" : "* * * * *";
 
 cron.schedule(CRON_SCHEDULE, () => {
   const now = new Date();

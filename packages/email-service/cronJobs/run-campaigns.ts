@@ -329,7 +329,7 @@ cron.schedule(CRON_SCHEDULE, () => {
 
   sendCampaignEmails()
     .then(() => {
-      console.log("Finished sending emails for this minute");
+      console.log("Finished sending emails for this " + humanReadableCron);
     })
     .catch((error) => {
       console.error("Error in email sender cron job:", error);

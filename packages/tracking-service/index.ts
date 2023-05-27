@@ -73,7 +73,7 @@ app.get("/link/:linkId", async (req, res) => {
     let url = result.rows[0].url;
 
     // check if url has https:// otherwise append it
-    if (!url.startsWith("https://") && !url.startsWith("http://")) {
+    if (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("mailto:")) {
       url = `https://${url}`;
     }
 

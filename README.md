@@ -6,7 +6,7 @@ Feel free to add GitHub issues and pull requests.
 
 For GitHub issues, I'll try to make a PR when I have time. Or you can contribute with a PR, and I'll do my best to review it within 24 hours.
 
-# Current Features
+## Current Features
 
 - unlimited sender email addresses 
 - support for any smtp email provider (e.g zoho mail, google suites, gmail, yahoo)

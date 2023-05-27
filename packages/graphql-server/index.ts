@@ -39,6 +39,7 @@ const typeDefs = gql`
     id: ID!
     click_count: Int!
     url: String!
+    email_address: String!
     last_clicked_at: String
     recipient_email: RecipientEmail!
   }
@@ -342,7 +343,8 @@ const resolvers = {
     },
     linkClicksByCampaign: async (_: any, { campaignId }: any) => {
       const query = `
-        SELECT lc.*
+        SELECT lc.*,
+        re.email_address
         FROM link_clicks AS lc
         JOIN recipient_emails AS re ON lc.recipient_email_id = re.id
         WHERE re.campaign_id = $1

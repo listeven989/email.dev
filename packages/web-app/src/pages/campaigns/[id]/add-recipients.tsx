@@ -32,6 +32,22 @@ const ADD_RECIPIENTS = gql`
     }
   }
 `;
+function splitStringOnCarriageAndComma(input: string): string[] {
+  const lines = input.split('\n');
+  const result: string[] = [];
+
+  lines.forEach((line) => {
+    const emails = line.split(',');
+    emails.forEach((email) => {
+      const trimmedEmail = email.trim();
+      if (trimmedEmail !== '') {
+        result.push(trimmedEmail);
+      }
+    });
+  });
+
+  return result;
+}
 
 export default function AddRecipients({}: Props) {
   const router = useRouter();
@@ -49,10 +65,12 @@ export default function AddRecipients({}: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+   const splitEmails = splitStringOnCarriageAndComma(emailAddresses);
+  
     await addRecipients({
       variables: {
         campaignId,
-        emailAddresses: emailAddresses.split("\n"),
+        emailAddresses: splitEmails
       },
     });
     router.push(`/campaigns/${campaignId}/recipients`);

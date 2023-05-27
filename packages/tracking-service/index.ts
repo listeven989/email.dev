@@ -1,4 +1,4 @@
-import express from "express";
+import express,{Request,Response} from "express";
 import path from "path";
 import { Pool } from "pg";
 import * as dotenv from "dotenv";
@@ -43,10 +43,8 @@ const updateEmailStatus = async (emailId: string) => {
 };
 
 // tracking endpoint but renamed to newsletter-image so that gmail doesn't block it
-app.get("/newsletter-image/:recipientEmailId", async (req, res) => {
-  let emailId = req.params.recipientEmailId;
-
-  console.log({ emailId });
+app.get("/newsletter-image/*", async (req: Request, res: Response) => {
+  let emailId = req.params[0] as string;
 
   if (emailId) {
     await updateEmailStatus(emailId);
@@ -56,10 +54,9 @@ app.get("/newsletter-image/:recipientEmailId", async (req, res) => {
   res.sendFile(path.join(__dirname, "pixel.png"));
 });
 
-app.get("/link/:linkId", async (req, res) => {
-  let linkId = req.params.linkId;
-  // TODO(@steven4354): remove this
-  linkId = linkId.replace(":", "");
+app.get("/link/*", async (req: Request, res: Response) => {
+  let linkId = req.params[0] as string;
+
 
   // Get the original URL from the database
   const query = `

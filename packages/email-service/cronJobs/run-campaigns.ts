@@ -276,17 +276,30 @@ async function pauseCampaignOnError(
   ]);
 }
 
+// Checks if a lock exists, if it does don't proceed
+// But if its been locked for more than 30 minutes, delete the lock
 async function acquireLock(client: Client, environment: string) {
   const checkLockQuery = `
-    SELECT environment FROM cron_lock
+    SELECT environment, locked_at FROM cron_lock
   `;
   const checkLockResult = await client.query(checkLockQuery);
 
   if (checkLockResult.rowCount > 0) {
     const lockedEnvironment = checkLockResult.rows[0].environment;
-    throw new Error(
-      `Lock already acquired by environment: ${lockedEnvironment}`
-    );
+    const lockedAt = checkLockResult.rows[0].locked_at;
+    const currentTime = new Date();
+    const lockDuration = (currentTime.getTime() - lockedAt.getTime()) / 60000;
+
+    if (lockDuration > 30) {
+      const deleteLockQuery = `
+        DELETE FROM cron_lock WHERE environment = $1
+      `;
+      await client.query(deleteLockQuery, [lockedEnvironment]);
+    } else {
+      throw new Error(
+        `Lock already acquired by environment: ${lockedEnvironment}`
+      );
+    }
   }
 
   const lockQuery = `

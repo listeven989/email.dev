@@ -16,7 +16,8 @@ For GitHub issues, I'll try to make a PR when I have time. Or you can contribute
 - you can host this anywhere you'd like (the production version uses render.com)
 - link click tracking, every link in an email is tracked and you can see which links are clicked by recipients
 - email open tracking
-- full support for html emails, no formatting or other issues
+- full support for html emails
+- full support for text emails
 
 ## Upcoming features
 

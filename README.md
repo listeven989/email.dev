@@ -1,19 +1,22 @@
 # Email outbound
 
-Open sourced version of mailchimp, instantly, replyio - because why wait for these closed-sourced companies to support the features you need when you can just spin up a PR and get it immediately available?
+Imagine a world where open source sets you free from depending on closed-source companies like MailChimp and Reply.io. You wouldn't have to wait for them to add the features you need. Instead, you could just create a pull request or GitHub issue, and get what you want quickly.
 
-Please feel free to add Github issues and pull requests. 
+Feel free to add GitHub issues and pull requests.
 
-For Github issues, I will try to throw up a PR when I have time. Otherwise feel free to contribute with a PR and I will try to review within 24 hours.
+For GitHub issues, I'll try to make a PR when I have time. Or you can contribute with a PR, and I'll do my best to review it within 24 hours.
 
-# Features
+# Current Features
 
 - unlimited sender email addresses 
-- support for any smtp email provider (e.g zoho mail, others)
-- unlimited email sends
+- support for any smtp email provider (e.g zoho mail, google suites, gmail, yahoo)
+- unlimited outbound emails
 - campaign support (group together email addresses and email templates to send out)
 - campaign limits (configure how many emails you'd like to be sent out in each campaign each day)
-- you can host this anywhere you'd like (i use render.com)
+- you can host this anywhere you'd like (the production version uses render.com)
+- link click tracking, every link in an email is tracked and you can see which links are clicked by recipients
+- email open tracking
+- full support for html emails, no formatting or other issues
 
 ## Upcoming features
 

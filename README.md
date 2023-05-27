@@ -1,4 +1,4 @@
-# Email outbound
+# Email.dev
 
 Imagine a world where open source sets you free from depending on closed-source companies like MailChimp and Reply.io. You wouldn't have to wait for them to add the features you need. Instead, you could just create a pull request or GitHub issue, and get what you want quickly.
 

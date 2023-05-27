@@ -39,6 +39,7 @@ const typeDefs = gql`
     id: ID!
     click_count: Int!
     url: String!
+    last_clicked_at: String
     recipient_email: RecipientEmail!
   }
 

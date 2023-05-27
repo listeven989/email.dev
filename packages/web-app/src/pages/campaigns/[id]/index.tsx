@@ -49,6 +49,7 @@ export const GET_CAMPAIGN = gql`
       id
       click_count
       url
+      last_clicked_at
     }
   }
 `;
@@ -198,7 +199,7 @@ const Campaign = () => {
                   {/* <Th>Email Address</Th> */}
                   <Th>URL</Th>
                   <Th>Click Count</Th>
-                  <Th>Clicked At</Th>
+                  <Th>Last Clicked At</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -211,7 +212,7 @@ const Campaign = () => {
                     </Td>
                     <Td>{linkClick.click_count}</Td>
                     <Td>
-                      {new Date(linkClick.recipientEmail).toLocaleString()}
+                      {linkClick.last_clicked_at ? new Date(parseInt(linkClick.last_clicked_at)).toLocaleString(): "--"}
                     </Td>
                   </Tr>
                 ))}

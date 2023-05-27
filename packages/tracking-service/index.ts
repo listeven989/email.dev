@@ -58,6 +58,7 @@ app.get("/newsletter-image/:recipientEmailId", async (req, res) => {
 
 app.get("/link/:linkId", async (req, res) => {
   let linkId = req.params.linkId;
+  // TODO(@steven4354): remove this
   linkId = linkId.replace(":", "");
 
   // Get the original URL from the database
@@ -65,14 +66,13 @@ app.get("/link/:linkId", async (req, res) => {
     UPDATE link_clicks SET click_count = click_count + 1 WHERE id = $1 RETURNING url;
   `;
 
-
   try {
     const result = await pool.query(query, [linkId]);
     let url = result.rows[0].url;
 
     // TODO INJECT CUSTOM URL QUERY PARAMETERS INTO THE URL
-     url = new URL(url);
-    //  VALUES CAN BE QUERIED FROM THE DATABASE 
+    url = new URL(url);
+    //  VALUES CAN BE QUERIED FROM THE DATABASE
     // url.searchParams.append('email_address', 'value1'); // append a query parameter
     // url.searchParams.append('param2', 'value2'); // append another query parameter
 
@@ -85,6 +85,6 @@ app.get("/link/:linkId", async (req, res) => {
 
 app.get("/", async (req, res) => {
   res.json({
-    message: "Newsletter service"
-  })
-})
+    message: "Newsletter service",
+  });
+});

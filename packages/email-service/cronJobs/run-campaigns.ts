@@ -112,6 +112,7 @@ async function getSendMailOptions(
     from: `${campaign.display_name} <${campaign.from_email}>`,
     to: recipient.email_address,
     subject: campaign.subject,
+    replyTo: campaign.reply_to_email_address
   };
 
   const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/newsletter-image/${recipient.id}" />`;
@@ -152,6 +153,7 @@ async function getCampaigns(client: Client) {
       campaigns.id AS campaign_id,
       campaigns.daily_limit,
       campaigns.emails_sent_today,
+      campaigns.reply_to_email_address,
       email_templates.subject,
       email_templates.text_content,
       email_templates.html_content,

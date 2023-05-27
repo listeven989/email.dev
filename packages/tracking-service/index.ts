@@ -72,10 +72,16 @@ app.get("/link/:linkId", async (req, res) => {
     const result = await pool.query(query, [linkId]);
     let url = result.rows[0].url;
 
+    // check if url has https:// otherwise append it
+    if (!url.startsWith("https://")) {
+      url = `https://${url}`;
+    }
+
     console.log("Url acquired from database. Redirecting to: ", url);
 
     // TODO INJECT CUSTOM URL QUERY PARAMETERS INTO THE URL
     url = new URL(url);
+
     // VALUES CAN BE QUERIED FROM THE DATABASE
     // url.searchParams.append('email_address', 'value1'); // append a query parameter
     // url.searchParams.append('param2', 'value2'); // append another query parameter

@@ -48,46 +48,6 @@ pnpm --filter web-app build
 pnpm --filter web-app start
 ```
 
-logging file structure
-
-```bash
-#!/bin/bash
-
-function list_files() {
-  local indent="$1"
-  local path="$2"
-
-  for item in "$path"/*; do
-    if [ -d "$item" ]; then
-      echo "${indent}- $(basename "$item")"
-      list_files "${indent}--" "$item"
-    else
-      echo "${indent}-- $(basename "$item")"
-    fi
-  done
-}
-
-list_files "-" "."
-```
-
-logging database structure
-
-```sql
-SELECT
-    table_schema,
-    table_name,
-    column_name,
-    data_type
-FROM
-    information_schema.columns
-WHERE
-    table_schema NOT IN ('pg_catalog', 'information_schema')
-ORDER BY
-    table_schema,
-    table_name,
-    column_name;
-```
-
 ## Deployment
 
 1. web-app is deployed on vercel

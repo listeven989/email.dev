@@ -138,7 +138,7 @@ const Campaign = () => {
             </Stack>
           </Box>
           <Heading as="h2" size="md">
-            Recipients who opened their emails
+            Email Opens
           </Heading>
           <Box
             borderWidth={1}

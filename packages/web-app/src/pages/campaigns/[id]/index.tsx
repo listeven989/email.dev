@@ -49,6 +49,8 @@ export const GET_CAMPAIGN = gql`
       id
       click_count
       url
+      last_clicked_at
+      email_address
     }
   }
 `;
@@ -195,23 +197,23 @@ const Campaign = () => {
             <Table variant="simple">
               <Thead>
                 <Tr>
-                  {/* <Th>Email Address</Th> */}
+                  <Th>Email Address</Th>
                   <Th>URL</Th>
                   <Th>Click Count</Th>
-                  <Th>Clicked At</Th>
+                  <Th>Last Clicked At</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {data.linkClicksByCampaign.map((linkClick: any) => (
                   <Tr key={linkClick.id}>
-                    {/* <Td>{linkClick.recipient_email.emailAddress}</Td> */}
+                    <Td>{linkClick.email_address}</Td>
                     {/* TODO: for long text just do a ... and make the link clickable */}
-                    <Td onClick={() => handleClick(linkClick.url)} style={{color: "blue", cursor: "pointer"}}>
+                    <Td onClick={() => handleClick(linkClick.url)} style={{ color: "blue", cursor: "pointer" }}>
                       {truncateText(linkClick.url)}
                     </Td>
                     <Td>{linkClick.click_count}</Td>
                     <Td>
-                      {new Date(linkClick.recipientEmail).toLocaleString()}
+                      {linkClick.last_clicked_at ? new Date(parseInt(linkClick.last_clicked_at)).toLocaleString() : "--"}
                     </Td>
                   </Tr>
                 ))}

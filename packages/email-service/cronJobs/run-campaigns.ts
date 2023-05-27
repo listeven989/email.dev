@@ -128,7 +128,7 @@ async function getSendMailOptions(
 
     $(link).attr(
       "href",
-      `${process.env.TRACKING_SERVICE_URL}/link/:${linkClickId}`
+      `${process.env.TRACKING_SERVICE_URL}/link/${linkClickId}`
     );
   }
 

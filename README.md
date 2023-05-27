@@ -6,6 +6,8 @@ Feel free to add GitHub issues and pull requests.
 
 For GitHub issues, I'll try to make a PR when I have time. Or you can contribute with a PR, and I'll do my best to review it within 24 hours.
 
+If you'd like to use this tool without hosting your own you can use https://email-outbound-ai-web-app.vercel.app
+
 ## Current Features
 
 - unlimited sender email addresses 

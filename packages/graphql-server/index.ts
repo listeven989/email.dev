@@ -38,7 +38,7 @@ const typeDefs = gql`
   type LinkClick {
     id: ID!
     click_count: Int!
-    url: String!
+    url: String
     email_address: String!
     last_clicked_at: String
     recipient_email: RecipientEmail!

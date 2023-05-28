@@ -48,12 +48,6 @@ pnpm --filter web-app build
 pnpm --filter web-app start
 ```
 
-## Deployment
-
-1. web-app is deployed on vercel
-2. email-service is deployed on render.com as a background worker type
-3. graphql-server is deployed on render.com as a web service type
-
 ## Packages
 
 email-service

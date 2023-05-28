@@ -56,7 +56,7 @@ export const GET_CAMPAIGN = gql`
 `;
 
 const truncateText = (text: string, maxLength = 30) => {
-  if (text.length > maxLength) {
+  if (text?.length > maxLength) {
     return text.slice(0, maxLength) + "...";
   }
   return text;

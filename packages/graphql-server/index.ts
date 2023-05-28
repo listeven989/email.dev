@@ -347,7 +347,7 @@ const resolvers = {
         re.email_address
         FROM link_clicks AS lc
         JOIN recipient_emails AS re ON lc.recipient_email_id = re.id
-        WHERE re.campaign_id = $1
+        WHERE re.campaign_id = $1 AND lc.url IS NOT NULL
       `;
       const { rows } = await pool.query(query, [campaignId]);
       return rows.filter((row: any) => row.click_count > 0);

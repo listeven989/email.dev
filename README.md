@@ -1,16 +1,10 @@
 # Why?
 
-You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, lem something, or something else) 
-
-Your email outbounds are running great. 
+You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, lem something, or something else). Your email outbounds are running great. 
 
 Until you realize you need X feature. 
 
-That feature could be HTML email support. 
-
-Or link tracking. 
-
-Or figuring out the exact person who clicked into that specific link in your spiffy new email copy.
+That feature could be HTML email support. Or link tracking. Or figuring out the exact person who clicked into that specific link in your spiffy new email copy.
 
 Then you realize you are missing Y feature. Then, Z feature. And you _really_ need that Z feature for that next campaign.
 

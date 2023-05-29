@@ -38,9 +38,7 @@ That's what this is for. The completely open sourced email outbound saas app. If
 
 You can use it here: https://email-outbound-ai-web-app.vercel.app
 
-Ok, but you're not a dev you say? No problemo, just tell the devs to make that spiffy feature you need. Go to https://github.com/steven4354/email-outbound-ai/issues and open a request
-
-If you ask nicely, the devs will ***gasp*** build that X, Y, Z feature and tell you when its ready!
+Ok, but you're not a dev you say? No problemo, just ask the devs to make that spiffy feature you need. Go to https://github.com/steven4354/email-outbound-ai/issues and open a request
 
 ## Current Features
 

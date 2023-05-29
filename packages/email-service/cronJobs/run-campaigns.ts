@@ -99,7 +99,7 @@ async function sendCampaignEmails() {
         );
 
         await new Promise((resolve) => setTimeout(resolve, delay));
-        delay = delay === 0 ? 1000 : delay * 15;
+        delay = delay === 0 ? 1000 : delay * 1500;
         delay++;
       }
 

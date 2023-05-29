@@ -11,14 +11,16 @@ import {
   Button,
   Container,
   Select,
+  Text,
 } from "@chakra-ui/react";
 import { GET_EMAIL_ACCOUNTS } from "../new";
+import EmailAccountSelector from "@/components/campaigns/email-account-selector";
 
 
 const EDIT_CAMPAIGN = gql`
   mutation EditCampaign(
     $id: ID!
-    $email_account_id: ID!
+    $email_account_ids: [ID!]!
     $name: String!
     $reply_to_email_address: String!
     $daily_limit: Int!
@@ -26,7 +28,7 @@ const EDIT_CAMPAIGN = gql`
   ) {
     editCampaign(
       id: $id
-      email_account_id: $email_account_id
+      email_account_ids: $email_account_ids
       name: $name
       reply_to_email_address: $reply_to_email_address
       daily_limit: $daily_limit
@@ -40,7 +42,7 @@ const EDIT_CAMPAIGN = gql`
 const GET_CAMPAIGN = gql`
   query GetCampaign($id: ID!) {
     campaign(id: $id) {
-      email_account_id
+      email_account_ids
       daily_limit
       name
       reply_to_email_address
@@ -55,11 +57,12 @@ const EditCampaign = () => {
 
   const { id: campaignId } = router.query;
 
-  const [emailAccountId, setEmailAccountId] = useState("");
+  const [selectedEmailAccountIds, setSelectedEmailAccountIds] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [replyToEmailAddress, setReplyToEmailAddress] = useState("");
   const [dailyLimit, setDailyLimit] = useState(0);
   const [status, setStatus] = useState("");
+  const [showEmailAccountsRequiredError, setShowEmailAccountsRequiredError] = useState(false);
 
   const [editCampaign, { loading: editLoading }] = useMutation(EDIT_CAMPAIGN);
   const { loading, error, data } = useQuery(GET_EMAIL_ACCOUNTS);
@@ -71,10 +74,17 @@ const EditCampaign = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
+    if (selectedEmailAccountIds.length <= 0) {
+      setShowEmailAccountsRequiredError(true);
+      return
+    }
+
+    setShowEmailAccountsRequiredError(false);
+
     const { data } = await editCampaign({
       variables: {
         id: campaignId,
-        email_account_id: emailAccountId,
+        email_account_ids: selectedEmailAccountIds,
         name,
         reply_to_email_address: replyToEmailAddress,
         daily_limit: dailyLimit,
@@ -93,11 +103,11 @@ const EditCampaign = () => {
   useEffect(() => {
     if (campaignData) {
       const campaign = campaignData.campaign;
-      setEmailAccountId(campaign.email_account_id);
       setName(campaign.name);
       setReplyToEmailAddress(campaign.reply_to_email_address);
       setDailyLimit(campaign.daily_limit);
       setStatus(campaign.status);
+      setSelectedEmailAccountIds(campaign.email_account_ids);
     }
   }, [campaignData]);
 
@@ -105,9 +115,6 @@ const EditCampaign = () => {
   if (error || campaignError) return <p>Error: {campaignError?.message || error?.message}</p>;
 
   const emailAccounts = data.emailAccounts;
-  const selectedEmailAccount = emailAccounts.find(
-    (account: any) => account.id === emailAccountId
-  );
 
   return (
     <Container maxW="container.md" py={12}>
@@ -120,33 +127,13 @@ const EditCampaign = () => {
             <VStack spacing={4}>
               <FormControl id="emailAccount">
                 <FormLabel>Email Account</FormLabel>
-                <Select
-                  placeholder="Select email account"
-                  value={emailAccountId}
-                  onChange={(e) => setEmailAccountId(e.target.value)}
-                  required
-                >
-                  {emailAccounts.map((account: any) => (
-                    <option key={account.id} value={account.id}>
-                      {account.email_address}
-                    </option>
-                  ))}
-                </Select>
+
+                <EmailAccountSelector
+                  selectedEmailAccountIds={selectedEmailAccountIds}
+                  setSelectedEmailAccountIds={setSelectedEmailAccountIds}
+                  emailAccounts={emailAccounts} />
               </FormControl>
-              {selectedEmailAccount && (
-                <Box>
-                  <Box>
-                    <strong>SMTP Host:</strong> {selectedEmailAccount.smtp_host}
-                  </Box>
-                  <Box>
-                    <strong>Account ID:</strong> {selectedEmailAccount.id}
-                  </Box>
-                  <Box>
-                    <strong>Email Address:</strong>{" "}
-                    {selectedEmailAccount.email_address}
-                  </Box>
-                </Box>
-              )}
+
               <FormControl id="name">
                 <FormLabel>Campaign Name</FormLabel>
                 <Input
@@ -190,6 +177,7 @@ const EditCampaign = () => {
                   <option>paused</option>
                 </Select>
               </FormControl>
+              {showEmailAccountsRequiredError && <Text color={"red"}>Please Select Email Accounts to Use</Text>}
 
               {editLoading ? <p>Loading...</p> :
                 <Button type="submit" colorScheme="blue">

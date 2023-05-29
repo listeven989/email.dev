@@ -12,6 +12,7 @@ import {
   Container,
   Select,
 } from "@chakra-ui/react";
+import EmailAccountSelector from "@/components/campaigns/email-account-selector";
 
 export const GET_EMAIL_ACCOUNTS = gql`
   query GetEmailAccounts {
@@ -25,13 +26,13 @@ export const GET_EMAIL_ACCOUNTS = gql`
 
 const CREATE_CAMPAIGN = gql`
   mutation CreateCampaign(
-    $email_account_id: ID!
+    $email_account_ids: [ID!]!
     $name: String!
     $reply_to_email_address: String!
     $daily_limit: Int!
   ) {
     createCampaign(
-      email_account_id: $email_account_id
+      email_account_ids: $email_account_ids
       name: $name
       reply_to_email_address: $reply_to_email_address
       daily_limit: $daily_limit
@@ -42,20 +43,29 @@ const CREATE_CAMPAIGN = gql`
 `;
 
 const NewCampaign = () => {
-  const [emailAccountId, setEmailAccountId] = useState("");
+  const [selectedEmailAccountIds, setSelectedEmailAccountIds] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [replyToEmailAddress, setReplyToEmailAddress] = useState("");
   const [dailyLimit, setDailyLimit] = useState(0);
   const [createCampaign] = useMutation(CREATE_CAMPAIGN);
   const { loading, error, data } = useQuery(GET_EMAIL_ACCOUNTS);
+  const [showEmailAccountsRequiredError, setShowEmailAccountsRequiredError] = useState(false);
+
   const router = useRouter();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
+    if(selectedEmailAccountIds.length <= 0){
+      setShowEmailAccountsRequiredError(true);
+      return
+    }
+
+    setShowEmailAccountsRequiredError(false);
+
     const { data } = await createCampaign({
       variables: {
-        email_account_id: emailAccountId,
+        email_account_ids: selectedEmailAccountIds,
         name,
         reply_to_email_address: replyToEmailAddress,
         daily_limit: dailyLimit,
@@ -72,9 +82,6 @@ const NewCampaign = () => {
   if (error) return <p>Error: {error.message}</p>;
 
   const emailAccounts = data.emailAccounts;
-  const selectedEmailAccount = emailAccounts.find(
-    (account: any) => account.id === emailAccountId
-  );
 
   return (
     <Container maxW="container.md" py={12}>
@@ -87,33 +94,11 @@ const NewCampaign = () => {
             <VStack spacing={4}>
               <FormControl id="emailAccount">
                 <FormLabel>Email Account</FormLabel>
-                <Select
-                  placeholder="Select email account"
-                  value={emailAccountId}
-                  onChange={(e) => setEmailAccountId(e.target.value)}
-                  required
-                >
-                  {emailAccounts.map((account: any) => (
-                    <option key={account.id} value={account.id}>
-                      {account.email_address}
-                    </option>
-                  ))}
-                </Select>
+                <EmailAccountSelector
+                  selectedEmailAccountIds={selectedEmailAccountIds}
+                  setSelectedEmailAccountIds={setSelectedEmailAccountIds}
+                  emailAccounts={emailAccounts} />
               </FormControl>
-              {selectedEmailAccount && (
-                <Box>
-                  <Box>
-                    <strong>SMTP Host:</strong> {selectedEmailAccount.smtp_host}
-                  </Box>
-                  <Box>
-                    <strong>Account ID:</strong> {selectedEmailAccount.id}
-                  </Box>
-                  <Box>
-                    <strong>Email Address:</strong>{" "}
-                    {selectedEmailAccount.email_address}
-                  </Box>
-                </Box>
-              )}
               <FormControl id="name">
                 <FormLabel>Campaign Name</FormLabel>
                 <Input

@@ -71,7 +71,8 @@ const typeDefs = gql`
   type Campaign {
     id: ID!
     user_id: ID!
-    email_account_id: ID!
+    email_account_id: ID
+    email_account_ids: [ID!]
     email_template_id: ID
     name: String!
     reply_to_email_address: String
@@ -158,7 +159,7 @@ const typeDefs = gql`
     ): EmailTemplate
 
     createCampaign(
-      email_account_id: ID!
+      email_account_ids: [ID!]!
       email_template_id: ID
       name: String!
       reply_to_email_address: String
@@ -169,7 +170,7 @@ const typeDefs = gql`
 
     editCampaign(
       id: ID!
-      email_account_id: ID!
+      email_account_ids:[ID!]!
       email_template_id: ID
       name: String!
       reply_to_email_address: String
@@ -279,7 +280,24 @@ const resolvers = {
         context
       );
       throwErrorIfNotFound(result.rows, "Campaign not found or not authorized");
-      return result.rows[0];
+
+      // get the email accounts
+      const emailAccountIdsQuery = `
+        SELECT email_account_id FROM campaign_email_accounts
+        WHERE campaign_id = $1
+      `;
+      const emailAccountIdsResult = await checkAuthAndQuery(
+        emailAccountIdsQuery,
+        [id],
+        context
+      );
+
+      return {
+        ...result.rows[0],
+        email_account_ids: emailAccountIdsResult.rows.map(
+          (row: any) => row.email_account_id
+        )
+      };
     },
 
     emailTemplateByCampaignId: async (
@@ -538,8 +556,8 @@ const resolvers = {
         query = `
         INSERT INTO recipient_emails (campaign_id, email_address)
         VALUES ${email_addresses
-          .map((_: any, i: number) => `($1, $${i + 2})`)
-          .join(", ")}
+            .map((_: any, i: number) => `($1, $${i + 2})`)
+            .join(", ")}
         ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
         RETURNING *;
         `;
@@ -574,7 +592,7 @@ const resolvers = {
       _: any,
       {
         id,
-        email_account_id,
+        email_account_ids,
         name,
         reply_to_email_address,
         daily_limit = 0,
@@ -590,10 +608,9 @@ const resolvers = {
       }
 
       const result = await pool.query(
-        "UPDATE campaigns SET user_id = $1, email_account_id= $2, name= $3, reply_to_email_address= $4, daily_limit= $5, status= $6 WHERE id = $7 RETURNING *",
+        "UPDATE campaigns SET user_id = $1, name= $2, reply_to_email_address= $3, daily_limit= $4, status= $5 WHERE id = $6 RETURNING *",
         [
           context.user.id,
-          email_account_id,
           name,
           reply_to_email_address,
           daily_limit,
@@ -601,12 +618,31 @@ const resolvers = {
           id,
         ]
       );
+
+      // Delete all email accounts for this campaign
+      await pool.query(
+        "DELETE FROM campaign_email_accounts WHERE campaign_id = $1",
+        [id]
+      );
+
+      // Insert the email accounts
+      if (email_account_ids && email_account_ids.length > 0) {
+        await pool.query(
+          `INSERT INTO campaign_email_accounts (campaign_id, email_account_id)
+          SELECT $1, id
+          FROM unnest($2::uuid[]) AS t(id)
+          `,
+
+          [result.rows[0].id, email_account_ids]
+        );
+      }
+
       return result.rows[0];
     },
     createCampaign: async (
       _: any,
       {
-        email_account_id,
+        email_account_ids,
         email_template_id = null,
         name,
         reply_to_email_address,
@@ -624,10 +660,9 @@ const resolvers = {
       }
 
       const result = await pool.query(
-        "INSERT INTO campaigns (user_id, email_account_id, email_template_id, name, reply_to_email_address, daily_limit, emails_sent_today, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        "INSERT INTO campaigns (user_id, email_template_id, name, reply_to_email_address, daily_limit, emails_sent_today, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
         [
           context.user.id,
-          email_account_id,
           email_template_id,
           name,
           reply_to_email_address,
@@ -636,6 +671,19 @@ const resolvers = {
           status,
         ]
       );
+
+      // Insert the email accounts
+      if (email_account_ids && email_account_ids.length > 0) {
+        await pool.query(
+          `INSERT INTO campaign_email_accounts (campaign_id, email_account_id)
+          SELECT $1, id
+          FROM unnest($2::uuid[]) AS t(id)
+          `,
+          [result.rows[0].id, email_account_ids]
+        );
+      }
+
+
       return result.rows[0];
     },
     createRecipientEmail: async (

@@ -48,16 +48,16 @@ async function sendCampaignEmails() {
 
       // get sender email accounts
       const emailAccountsQuery = `
-      SELECT 
-      email_accounts.email_address AS from_email,
-      email_accounts.display_name,
-      email_accounts.smtp_host,
-      email_accounts.smtp_port,
-      email_accounts.username,
-      email_accounts.password
-      FROM campaign_email_accounts
-      INNER JOIN email_accounts ON email_accounts.id = campaign_email_accounts.email_account_id
-      WHERE campaign_email_accounts.campaign_id = $1
+        SELECT 
+        email_accounts.email_address AS from_email,
+        email_accounts.display_name,
+        email_accounts.smtp_host,
+        email_accounts.smtp_port,
+        email_accounts.username,
+        email_accounts.password
+        FROM campaign_email_accounts
+        INNER JOIN email_accounts ON email_accounts.id = campaign_email_accounts.email_account_id
+        WHERE campaign_email_accounts.campaign_id = $1
       `;
       const emailAccounts = await client.query(emailAccountsQuery, [
         campaign.campaign_id,
@@ -75,7 +75,10 @@ async function sendCampaignEmails() {
           campaign.campaign_id,
           " / ",
           "Sending email to: ",
-          recipient.email_address
+          recipient.email_address,
+          " / ",
+          "From email: ",
+          emailAccount.from_email
         );
 
         const transporter = createTransport(getTransporterConfig(emailAccount));
@@ -111,7 +114,12 @@ async function sendCampaignEmails() {
         `An error occurred during campaign ${campaign.campaign_id}:`,
         error
       );
-      await pauseCampaignOnError(client, campaign.campaign_id, campaign.name, error);
+      await pauseCampaignOnError(
+        client,
+        campaign.campaign_id,
+        campaign.name,
+        error
+      );
     }
   }
 

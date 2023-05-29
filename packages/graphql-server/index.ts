@@ -442,6 +442,9 @@ const resolvers = {
       _: any,
       { emailTemplateId, recipientEmail, campaignId, emailAccountId }: any
     ) {
+      // TODO(@steven4354): redo this by creating a throwaway campaign for test emails instead
+      throw new Error("Not implemented");
+
       // query the email template
       const result = await pool.query(
         "SELECT * FROM email_templates WHERE id = $1",

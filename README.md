@@ -1,12 +1,32 @@
-# Email.dev
+# Why?
 
-Imagine a world where open source sets you free from depending on closed-source companies like MailChimp, Instantlyai and Replyio. You wouldn't have to wait for them to add the features you need. Instead, you could just create a pull request or GitHub issue, and get what you want quickly.
+You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, lem something, or something else) 
 
-Feel free to add GitHub issues and pull requests.
+Your email outbounds are running great. 
 
-For GitHub issues, I'll try to make a PR when I have time. Or you can contribute with a PR, and I'll do my best to review it within 24 hours.
+Until you realize you need X feature. That feature could be HTML email support. Or link tracking. Or figuring out the exact person who clicked into that specific link in your spiffy new email copy.
 
-If you'd like to use this tool without hosting your own you can use https://email-outbound-ai-web-app.vercel.app
+Then you realize you are missing Y feature. Then, Z feature. And you _really_ need that one for that next campaign.
+
+Poof. Now you need to look for another tool to do that X, Y, and Z feature. 
+
+Ok you found one. Time to move all your campaigns to a new tool. Figure out which people you already emailed or haven't. Re-setup up all your campaigns...
+
+But wait.
+
+Hold up.
+
+Wait a second.
+
+There's a crazy idea:
+
+`Why not just code that feature for your existing email tool?`
+
+That's what this is for. The completely open sourced email outbound tool. You can use it here: https://email-outbound-ai-web-app.vercel.app
+
+Ok, but you're not a dev you say? No problemo, just tell the devs to make that spiffy feature you need. Go to https://github.com/steven4354/email-outbound-ai/issues and make a request
+
+If you ask nicely, the devs will *gasp* just build that X, Y, Z feature and tell you when its ready!
 
 ## Current Features
 

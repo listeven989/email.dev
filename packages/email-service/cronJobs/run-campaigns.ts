@@ -111,7 +111,7 @@ async function sendCampaignEmails() {
         `An error occurred during campaign ${campaign.campaign_id}:`,
         error
       );
-      await pauseCampaignOnError(client, campaign.campaign_id, campaign.name);
+      await pauseCampaignOnError(client, campaign.campaign_id, campaign.name, error);
     }
   }
 
@@ -307,16 +307,18 @@ async function updateCampaignStatus(client: Client, campaignId: number) {
 async function pauseCampaignOnError(
   client: Client,
   campaignId: number,
-  campaignName: string
+  campaignName: string,
+  error: any
 ) {
   const updateCampaignQuery = `
     UPDATE campaigns
-    SET status = 'paused', name = $1
+    SET status = 'paused', name = $1, error = $3
     WHERE id = $2
   `;
   await client.query(updateCampaignQuery, [
     `${campaignName} [AUTO_PAUSED_DUE_TO_ERROR]`,
     campaignId,
+    error,
   ]);
 }
 

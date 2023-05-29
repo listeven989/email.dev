@@ -14,6 +14,8 @@ Now you need to look for another email outbound alternative to do that X, Y, and
 
 You spend hours digging through sites and forums testing different ones out.
 
+_And another hour_
+
 Ok, now you found one. 
 
 Time to move all your campaigns to a new tool. 

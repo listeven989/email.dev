@@ -63,7 +63,10 @@ async function sendCampaignEmails() {
         campaign.campaign_id,
       ]);
 
-      let delay = 0;
+      const getRandomDelay = (min: number, max: number) => {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+      };
+
       for (let i = 0; i < recipients.length; i++) {
         const recipient = recipients[i];
 
@@ -98,9 +101,8 @@ async function sendCampaignEmails() {
           campaign.campaign_id
         );
 
+        const delay = getRandomDelay(30 * 1000, 2 * 60 * 1000); // 30s to 2min
         await new Promise((resolve) => setTimeout(resolve, delay));
-        delay = delay === 0 ? 1000 : delay * 1500;
-        delay++;
       }
 
       const unsentEmailsCount = await getUnsentEmailsCount(

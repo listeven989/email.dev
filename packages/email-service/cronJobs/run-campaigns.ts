@@ -176,13 +176,28 @@ async function getSendMailOptions(
   return sendMailOpts;
 }
 
-async function getCampaigns(client: Client) {
+type CampaignWithTemplate = {
+  campaign_id: number;
+  id: number;
+  name: string;
+  status: string;
+  daily_limit: number;
+  emails_sent_today: number;
+  reply_to_email_address: string;
+  email_template_id: number;
+  archive: boolean;
+  created_at: Date;
+  updated_at: Date;
+  subject: string;
+  text_content: string;
+  html_content: string;
+};
+
+async function getCampaigns(client: Client): Promise<CampaignWithTemplate[]> {
   const campaignsQuery = `
     SELECT 
       campaigns.id AS campaign_id,
-      campaigns.daily_limit,
-      campaigns.emails_sent_today,
-      campaigns.reply_to_email_address,
+      campaigns.*,
       email_templates.subject,
       email_templates.text_content,
       email_templates.html_content
@@ -300,7 +315,7 @@ async function pauseCampaignOnError(
     WHERE id = $2
   `;
   await client.query(updateCampaignQuery, [
-    `${campaignName} - AUTO PAUSED DUE TO ERROR`,
+    `${campaignName} [AUTO_PAUSED_DUE_TO_ERROR]`,
     campaignId,
   ]);
 }

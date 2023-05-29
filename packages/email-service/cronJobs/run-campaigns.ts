@@ -72,6 +72,13 @@ async function sendCampaignEmails() {
       for (let i = 0; i < 5; i++) {
         const recipient = recipients[i];
 
+        // Check that recipient is a valid email address
+        const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
+        if (!emailRegex.test(recipient.email_address)) {
+          console.log("Invalid email address:", recipient.email_address);
+          continue;
+        }
+
         const index = i % emailAccounts.rowCount;
         const emailAccount = emailAccounts.rows[index];
 

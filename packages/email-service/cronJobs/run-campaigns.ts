@@ -67,7 +67,9 @@ async function sendCampaignEmails() {
         return Math.floor(Math.random() * (max - min + 1) + min);
       };
 
-      for (let i = 0; i < recipients.length; i++) {
+      // Do a maximum of 5 sends per campaign at a time
+      // if the daily limit is greater than 5, just let the next cron job run do another 5, so on until its reached the limit
+      for (let i = 0; i < 5; i++) {
         const recipient = recipients[i];
 
         const index = i % emailAccounts.rowCount;

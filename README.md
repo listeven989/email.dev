@@ -36,7 +36,7 @@ _Why not just code that feature for your existing email tool?_
 
 That's what this is for. The completely open sourced email outbound saas app. If you need any features just code it, open a PR and viola, once its merged to main, it's live.
 
-You can use it here: https://email-outbound-ai-web-app.vercel.app
+You can use it here: https://email-outbound-ai-web-app.vercel.app. Or go ahead and host your own version.
 
 Ok, but you're not a dev you say? No problemo, just ask the devs to make that spiffy feature you need. Go to https://github.com/steven4354/email-outbound-ai/issues and open a request
 

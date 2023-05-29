@@ -40,7 +40,11 @@ async function sendCampaignEmails() {
         continue;
       }
 
-      const recipients = await getRecipients(client, campaign.campaign_id, emailsToSend);
+      const recipients = await getRecipients(
+        client,
+        campaign.campaign_id,
+        emailsToSend
+      );
 
       // get sender email accounts
       const emailAccountsQuery = `
@@ -54,17 +58,17 @@ async function sendCampaignEmails() {
       FROM campaign_email_accounts
       INNER JOIN email_accounts ON email_accounts.id = campaign_email_accounts.email_account_id
       WHERE campaign_email_accounts.campaign_id = $1
-      `
-      const emailAccounts = await client.query(emailAccountsQuery, [campaign.campaign_id]);
+      `;
+      const emailAccounts = await client.query(emailAccountsQuery, [
+        campaign.campaign_id,
+      ]);
 
-      
       let delay = 0;
       for (let i = 0; i < recipients.length; i++) {
         const recipient = recipients[i];
 
         const index = i % emailAccounts.rowCount;
         const emailAccount = emailAccounts.rows[index];
-
 
         console.log(
           "Campiagn id: ",
@@ -133,13 +137,11 @@ async function getSendMailOptions(
   recipient: any,
   emailAccount: any
 ) {
-
-
   const sendMailOpts: any = {
     from: `${emailAccount.display_name} <${emailAccount.from_email}>`,
     to: recipient.email_address,
     subject: campaign.subject,
-    replyTo: campaign.reply_to_email_address
+    replyTo: campaign.reply_to_email_address,
   };
 
   const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/newsletter-image/${recipient.id}" />`;
@@ -192,7 +194,11 @@ async function getCampaigns(client: Client) {
   return campaignsResult.rows;
 }
 
-async function getRecipients(client: Client, campaignId: number, maxToSend: number) {
+async function getRecipients(
+  client: Client,
+  campaignId: number,
+  maxToSend: number
+) {
   const recipientsQuery = `
     SELECT recipient_emails.id, recipient_emails.email_address
     FROM recipient_emails
@@ -200,7 +206,10 @@ async function getRecipients(client: Client, campaignId: number, maxToSend: numb
     WHERE recipient_emails.campaign_id = $1 AND recipient_emails.sent = false
     LIMIT $2
   `;
-  const recipientsResult = await client.query(recipientsQuery, [campaignId, maxToSend]);
+  const recipientsResult = await client.query(recipientsQuery, [
+    campaignId,
+    maxToSend,
+  ]);
   return recipientsResult.rows;
 }
 

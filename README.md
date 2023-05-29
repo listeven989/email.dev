@@ -4,29 +4,45 @@ You spent 2 weeks setting up campaigns on your favorite email outbound tool (ins
 
 Your email outbounds are running great. 
 
-Until you realize you need X feature. That feature could be HTML email support. Or link tracking. Or figuring out the exact person who clicked into that specific link in your spiffy new email copy.
+Until you realize you need X feature. 
 
-Then you realize you are missing Y feature. Then, Z feature. And you _really_ need that one for that next campaign.
+That feature could be HTML email support. 
 
-Poof. Now you need to look for another tool to do that X, Y, and Z feature. 
+Or link tracking. 
 
-Ok you found one. Time to move all your campaigns to a new tool. Figure out which people you already emailed or haven't. Re-setup up all your campaigns...
+Or figuring out the exact person who clicked into that specific link in your spiffy new email copy.
 
-But wait.
+Then you realize you are missing Y feature. Then, Z feature. And you _really_ need that Z feature for that next campaign.
 
-Hold up.
+Boom. Now you need to look for another email outbound alternative to do that X, Y, and Z feature. 
 
-Wait a second.
+You spend hours digging through sites and forums testing different ones out.
+
+Ok, now you found one. 
+
+Time to move all your campaigns to a new tool. 
+
+Figure out which people you already emailed or haven't. 
+
+Re-setup up all your campaigns...
+
+But wait.....
+
+Hold up......
+
+Wait a second....
 
 There's a crazy idea:
 
-`Why not just code that feature for your existing email tool?`
+_Why not just code that feature for your existing email tool?_
 
-That's what this is for. The completely open sourced email outbound tool. You can use it here: https://email-outbound-ai-web-app.vercel.app
+That's what this is for. The completely open sourced email outbound saas app. If you need any features just code it, open a PR and viola, once its merged to main, it's live.
 
-Ok, but you're not a dev you say? No problemo, just tell the devs to make that spiffy feature you need. Go to https://github.com/steven4354/email-outbound-ai/issues and make a request
+You can use it here: https://email-outbound-ai-web-app.vercel.app
 
-If you ask nicely, the devs will *gasp* just build that X, Y, Z feature and tell you when its ready!
+Ok, but you're not a dev you say? No problemo, just tell the devs to make that spiffy feature you need. Go to https://github.com/steven4354/email-outbound-ai/issues and open a request
+
+If you ask nicely, the devs will *gasp* build that X, Y, Z feature and tell you when its ready!
 
 ## Current Features
 

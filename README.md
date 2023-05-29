@@ -8,13 +8,13 @@ That feature could be HTML email support. Or link tracking. Or figuring out the 
 
 Then you realize you are missing Y feature. Then, Z feature. And you _really_ need that Z feature for that next campaign.
 
-Boom. 
+**Boom.**
 
 Now you need to look for another email outbound alternative to do that X, Y, and Z feature. 
 
 You spend hours digging through sites and forums testing different ones out.
 
-_And another hour_
+**_And another hour_**
 
 Ok, now you found one. 
 

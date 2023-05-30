@@ -443,7 +443,7 @@ const resolvers = {
       { emailTemplateId, recipientEmail, campaignId, emailAccountId }: any
     ) {
       // TODO(@steven4354): redo this by creating a throwaway campaign for test emails instead
-      throw new Error("Not implemented");
+      // throw new Error("Not implemented");
 
       // query the email template
       const result = await pool.query(

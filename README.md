@@ -1,12 +1,44 @@
-# Email.dev
+# Why?
 
-Imagine a world where open source sets you free from depending on closed-source companies like MailChimp, Instantlyai and Replyio. You wouldn't have to wait for them to add the features you need. Instead, you could just create a pull request or GitHub issue, and get what you want quickly.
+You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, lem something, or something else). Your email outbounds are running great. 
 
-Feel free to add GitHub issues and pull requests.
+Until you realize you need X feature. 
 
-For GitHub issues, I'll try to make a PR when I have time. Or you can contribute with a PR, and I'll do my best to review it within 24 hours.
+That feature could ability to send long HTML emails. Or link tracking. Or figuring out the exact person who clicked into that specific link in your spiffy new email copy.
 
-If you'd like to use this tool without hosting your own you can use https://email-outbound-ai-web-app.vercel.app
+Then you realize you are missing Y feature. Then, Z feature. And you _really_ need that Z feature for that next campaign.
+
+**Boom.**
+
+Now you need to look for another email outbound alternative to do that X, Y, and Z feature. 
+
+You spend hours digging through sites and forums testing different ones out.
+
+**_And another hour_**
+
+Ok, now you found one. 
+
+Time to move all your campaigns to a new tool. 
+
+Figure out which people you already emailed or haven't. 
+
+Re-setup up all your campaigns...
+
+- But wait.....
+
+- Hold up......
+
+- Wait a second....
+
+**There's a crazy idea:**
+
+_Why not just code that feature for your existing email tool?_
+
+That's what this is for. The completely open sourced email outbound saas app. If you need any features just code it, open a PR and viola, once its merged to main, it's live.
+
+You can use it here: https://email-outbound-ai-web-app.vercel.app. Or go ahead and host your own version.
+
+Ok, but you're not a dev you say? No problemo, just ask the devs to make that spiffy feature you need. Go to https://github.com/steven4354/email-outbound-ai/issues and open a request
 
 ## Current Features
 

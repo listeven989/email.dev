@@ -65,9 +65,21 @@ async function sendCampaignEmails() {
         campaign.campaign_id,
       ]);
 
-      let delay = 0;
-      for (let i = 0; i < recipients.length; i++) {
+      const getRandomDelay = (min: number, max: number) => {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+      };
+
+      // Do a maximum of 5 sends per campaign at a time
+      // if the daily limit is greater than 5, just let the next cron job run do another 5, so on until its reached the limit
+      for (let i = 0; i < 5; i++) {
         const recipient = recipients[i];
+
+        // Check that recipient is a valid email address
+        const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
+        if (!emailRegex.test(recipient.email_address)) {
+          console.log("Invalid email address:", recipient.email_address);
+          continue;
+        }
 
         const index = i % emailAccounts.rowCount;
         const emailAccount = emailAccounts.rows[index];
@@ -77,7 +89,10 @@ async function sendCampaignEmails() {
           campaign.campaign_id,
           " / ",
           "Sending email to: ",
-          recipient.email_address
+          recipient.email_address,
+          " / ",
+          "From email: ",
+          emailAccount.from_email
         );
 
         const transporter = createTransport(getTransporterConfig(emailAccount));
@@ -99,8 +114,8 @@ async function sendCampaignEmails() {
           emailAccount.id
         );
 
+        const delay = getRandomDelay(30 * 1000, 2 * 60 * 1000); // 30s to 2min
         await new Promise((resolve) => setTimeout(resolve, delay));
-        delay = delay === 0 ? 1000 : delay * 15;
       }
 
       const unsentEmailsCount = await getUnsentEmailsCount(
@@ -115,7 +130,12 @@ async function sendCampaignEmails() {
         `An error occurred during campaign ${campaign.campaign_id}:`,
         error
       );
-      await pauseCampaignOnError(client, campaign.campaign_id, campaign.name);
+      await pauseCampaignOnError(
+        client,
+        campaign.campaign_id,
+        campaign.name,
+        error
+      );
     }
   }
 
@@ -313,16 +333,18 @@ async function updateCampaignStatus(client: Client, campaignId: number) {
 async function pauseCampaignOnError(
   client: Client,
   campaignId: number,
-  campaignName: string
+  campaignName: string,
+  error: any
 ) {
   const updateCampaignQuery = `
     UPDATE campaigns
-    SET status = 'paused', name = $1
+    SET status = 'paused', name = $1, error = $3
     WHERE id = $2
   `;
   await client.query(updateCampaignQuery, [
     `${campaignName} [AUTO_PAUSED_DUE_TO_ERROR]`,
     campaignId,
+    error,
   ]);
 }
 

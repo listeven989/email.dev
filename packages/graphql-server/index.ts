@@ -93,6 +93,7 @@ const typeDefs = gql`
     updated_at: String!
     read: Int!
     read_at: String!
+    sender_email_address: String
   }
 
   type RecipientReadInfo {
@@ -349,7 +350,7 @@ const resolvers = {
         "Campaign not found or not authorized"
       );
 
-      const query = "SELECT * FROM recipient_emails WHERE campaign_id = $1";
+      const query = "SELECT re.*,ea.email_address AS sender_email_address FROM recipient_emails AS re LEFT JOIN email_accounts AS ea ON re.sender_email_account_id = ea.id  WHERE re.campaign_id = $1";
       const result = await checkAuthAndQuery(query, [campaignId], context);
 
       return result.rows;

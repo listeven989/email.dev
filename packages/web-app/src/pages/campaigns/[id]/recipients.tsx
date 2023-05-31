@@ -1,6 +1,6 @@
 import { gql, useQuery } from '@apollo/client';
 import { useRouter } from 'next/router';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     Box,
     Heading,
@@ -28,6 +28,7 @@ export const GET_RECIPIENTS = gql`
       email_address
       sent
       sent_at
+      sender_email_address
     }
 }
 `;
@@ -39,12 +40,37 @@ export default function Recipients({ }: Props) {
         variables: { campaignId },
     });
 
+    const [recipients, setRecipients] = useState<any>([])
+
+
+    useEffect(() => {
+        if (data) {
+            const recipientsCopy = [...data.recipientEmails];
+            const sortedRecipients = recipientsCopy.sort((a: any, b: any) => {
+                if (a.sent_at === null && b.sent_at === null) {
+                    return 0;
+                }
+                if (a.sent_at === null) {
+                    return 1;
+                }
+                if (b.sent_at === null) {
+                    return -1;
+                }
+                return parseInt(a.sent_at) > parseInt(b.sent_at) ? -1 : 1;
+            });
+
+            setRecipients(sortedRecipients)
+        }
+    }, [data])
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error.message}</p>;
 
     if (!data) return null;
 
-    const recipients = data.recipientEmails;
+
+
+
 
     return (
         <Container maxW="container.xl" py={12}>
@@ -81,22 +107,40 @@ export default function Recipients({ }: Props) {
                                 <Th color="white" fontWeight="bold">
                                     Email Address
                                 </Th>
+
+
                                 <Th color="white" fontWeight="bold">
                                     Sent
                                 </Th>
+                                <Th color="white" fontWeight="bold">
+                                    Sent By
+                                </Th>
+
                                 <Th color="white" fontWeight="bold">
                                     Sent At
                                 </Th>
                             </Tr>
                         </Thead>
                         <Tbody>
-                            {recipients.map((recipient: any) => (
-                                <Tr key={recipient.id}>
+                            {recipients.map((recipient: any) => {
+                                const sentDate = new Date(parseInt(recipient.sent_at)).toLocaleDateString('en-US', {
+                                    timeZone: 'America/Los_Angeles',
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    second: 'numeric'
+                                });
+
+                                return <Tr key={recipient.id}>
                                     <Td>{recipient.email_address}</Td>
-                                    <Td>{recipient.sent}</Td>
-                                    <Td>{recipient.sent_at}</Td>
+                                    <Td>{recipient.sent && recipient.sent.toString()}</Td>
+                                    <Td>{recipient.sender_email_address}</Td>
+                                    <Td>{recipient.sent_at ? sentDate : "--"}</Td>
                                 </Tr>
-                            ))}
+                            })}
                         </Tbody>
                     </Table>
                 </Box>

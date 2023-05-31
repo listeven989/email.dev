@@ -55,6 +55,7 @@ const typeDefs = gql`
     password: String!
     created_at: String!
     updated_at: String!
+    is_valid: Boolean!
   }
 
   type EmailTemplate {
@@ -102,7 +103,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    emailAccounts: [EmailAccount]
+    emailAccounts(all: Boolean): [EmailAccount]
     emailTemplates: [EmailTemplate]
     campaigns: [Campaign]
     campaign(id: ID!): Campaign
@@ -355,8 +356,8 @@ const resolvers = {
 
       return result.rows;
     },
-    emailAccounts: async (_: any, __: any, context: { user: any }) => {
-      const query = "SELECT * FROM email_accounts WHERE user_id = $1";
+    emailAccounts: async (_: any, { all }: any, context: { user: any }) => {
+      const query = all ? "SELECT * FROM email_accounts WHERE user_id = $1 AND is_valid=true" : "SELECT * FROM email_accounts WHERE user_id = $1"
       const result = await checkAuthAndQuery(query, [context.user.id], context);
       return result.rows;
     },

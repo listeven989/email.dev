@@ -10,7 +10,8 @@
     "cron:all": "npx ts-node cronJobs/index.ts",
     "cron:campaigns": "npx ts-node cronJobs/run-campaigns.ts",
     "cron:limit": "npx ts-node cronJobs/reset-campaign-daily-limits.ts",
-    "cron:valid-emails": "npx ts-node cronJobs/check-valid-email-accounts.ts"
+    "cron:valid-emails": "npx ts-node cronJobs/check-valid-email-accounts.ts",
+    "cron:spamcheck": "npx ts-node cronJobs/spam-check.ts"
 
   },
   "keywords": [],
@@ -20,6 +21,8 @@
     "cheerio": "^1.0.0-rc.12",
     "cronstrue": "^2.27.0",
     "dotenv": "^16.0.3",
+    "google-auth-library": "^8.8.0",
+    "googleapis": "^118.0.0",
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.1",
     "pg": "^8.11.0"

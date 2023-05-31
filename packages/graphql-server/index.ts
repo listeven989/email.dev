@@ -56,6 +56,7 @@ const typeDefs = gql`
     created_at: String!
     updated_at: String!
     is_valid: Boolean!
+    spam: Boolean
   }
 
   type EmailTemplate {

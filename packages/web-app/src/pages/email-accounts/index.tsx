@@ -28,6 +28,7 @@ const GET_EMAIL_ACCOUNTS = gql`
       username
       password
       is_valid
+      spam
     }
   }
 `;
@@ -97,6 +98,10 @@ const [emailAccounts,setEmailAccounts] = useState<any>([])
                 <Th color="white" fontWeight="bold">
                   Username
                 </Th>
+
+                <Th color="white" fontWeight="bold">
+                  Goes to Spam
+                </Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -107,6 +112,8 @@ const [emailAccounts,setEmailAccounts] = useState<any>([])
                   <Td>{account.smtp_host}</Td>
                   <Td>{account.smtp_port}</Td>
                   <Td>{account.username}</Td>
+                  <Td>{account.spam?.toString()}</Td>
+
                 </Tr>
               ))}
             </Tbody>

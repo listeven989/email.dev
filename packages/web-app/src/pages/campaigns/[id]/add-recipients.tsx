@@ -48,6 +48,20 @@ function splitStringOnCarriageAndComma(input: string): string[] {
 
   return result;
 }
+function filterValidEmails(emails: string[]): string[] {
+  const validEmails: string[] = [];
+
+  const emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  for (const email of emails) {
+    if (emailRegex.test(email)) {
+      validEmails.push(email);
+    }
+  }
+
+  return validEmails;
+}
+
 
 export default function AddRecipients({}: Props) {
   const router = useRouter();
@@ -66,11 +80,14 @@ export default function AddRecipients({}: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
    const splitEmails = splitStringOnCarriageAndComma(emailAddresses);
+   const validEmails = filterValidEmails(splitEmails);
+
+  
   
     await addRecipients({
       variables: {
         campaignId,
-        emailAddresses: splitEmails
+        emailAddresses: validEmails
       },
     });
     router.push(`/campaigns/${campaignId}/recipients`);

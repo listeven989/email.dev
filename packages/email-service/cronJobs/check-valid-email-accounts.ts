@@ -65,11 +65,14 @@ async function checkValidEmailAccounts() {
             const query = `UPDATE email_accounts SET is_valid=true WHERE id=$1 `;
             await client.query(query, [emailAccount.id]);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error sending email for:", emailAccount.from_email, error);
 
-            const query = `UPDATE email_accounts SET is_valid=false WHERE id=$1 `;
-            await client.query(query, [emailAccount.id]);
+            const query = `UPDATE email_accounts SET is_valid=false, error_message=$2 WHERE id=$1 `;
+            await client.query(query, [
+                emailAccount.id,
+                error.message
+            ]);
 
             // set the campaigns that have only that email to paused
             const selectQuery = `SELECT cea.campaign_id FROM campaign_email_accounts AS cea

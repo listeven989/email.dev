@@ -24,6 +24,7 @@ async function sendCampaignEmails() {
 
   // Acquire the lock
   const environment = process.env.ENVIRONMENT;
+
   if (!environment) {
     throw new Error("ENVIRONMENT not set");
   }
@@ -48,16 +49,17 @@ async function sendCampaignEmails() {
 
       // get sender email accounts
       const emailAccountsQuery = `
-        SELECT 
-        email_accounts.email_address AS from_email,
-        email_accounts.display_name,
-        email_accounts.smtp_host,
-        email_accounts.smtp_port,
-        email_accounts.username,
-        email_accounts.password
-        FROM campaign_email_accounts
-        INNER JOIN email_accounts ON email_accounts.id = campaign_email_accounts.email_account_id
-        WHERE campaign_email_accounts.campaign_id = $1
+      SELECT 
+      email_accounts.id,
+      email_accounts.email_address AS from_email,
+      email_accounts.display_name,
+      email_accounts.smtp_host,
+      email_accounts.smtp_port,
+      email_accounts.username,
+      email_accounts.password
+      FROM campaign_email_accounts
+      INNER JOIN email_accounts ON email_accounts.id = campaign_email_accounts.email_account_id
+      WHERE campaign_email_accounts.campaign_id = $1
       `;
       const emailAccounts = await client.query(emailAccountsQuery, [
         campaign.campaign_id,
@@ -104,10 +106,12 @@ async function sendCampaignEmails() {
         await transporter.sendMail(sendMailOpts);
 
         await incrementEmailsSentToday(client, campaign.campaign_id);
+
         await updateRecipientEmails(
           client,
           recipient.email_address,
-          campaign.campaign_id
+          campaign.campaign_id,
+          emailAccount.id
         );
 
         const delay = getRandomDelay(30 * 1000, 2 * 60 * 1000); // 30s to 2min
@@ -268,17 +272,19 @@ async function incrementEmailsSentToday(client: Client, campaignId: number) {
 async function updateRecipientEmails(
   client: Client,
   email_address: string,
-  campaign_id: number
+  campaign_id: number,
+  sender_email_account_id: number
 ) {
   const updateRecipientEmailsQuery = `
     UPDATE recipient_emails
-    SET sent = true, sent_at = NOW()
+    SET sent = true, sent_at = NOW(), sender_email_account_id = $3
     WHERE email_address = $1 AND campaign_id = $2
     RETURNING sent, sent_at
   `;
   const result = await client.query(updateRecipientEmailsQuery, [
     email_address,
     campaign_id,
+    sender_email_account_id
   ]);
 
   if (

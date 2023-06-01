@@ -55,6 +55,8 @@ const typeDefs = gql`
     password: String!
     created_at: String!
     updated_at: String!
+    is_valid: Boolean!
+    spam: Boolean
   }
 
   type EmailTemplate {
@@ -93,6 +95,7 @@ const typeDefs = gql`
     updated_at: String!
     read: Int!
     read_at: String!
+    sender_email_address: String
   }
 
   type RecipientReadInfo {
@@ -101,7 +104,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    emailAccounts: [EmailAccount]
+    emailAccounts(all: Boolean): [EmailAccount]
     emailTemplates: [EmailTemplate]
     campaigns: [Campaign]
     campaign(id: ID!): Campaign
@@ -349,13 +352,13 @@ const resolvers = {
         "Campaign not found or not authorized"
       );
 
-      const query = "SELECT * FROM recipient_emails WHERE campaign_id = $1";
+      const query = "SELECT re.*,ea.email_address AS sender_email_address FROM recipient_emails AS re LEFT JOIN email_accounts AS ea ON re.sender_email_account_id = ea.id  WHERE re.campaign_id = $1";
       const result = await checkAuthAndQuery(query, [campaignId], context);
 
       return result.rows;
     },
-    emailAccounts: async (_: any, __: any, context: { user: any }) => {
-      const query = "SELECT * FROM email_accounts WHERE user_id = $1";
+    emailAccounts: async (_: any, { all }: any, context: { user: any }) => {
+      const query = all ? "SELECT * FROM email_accounts WHERE user_id = $1 AND is_valid=true" : "SELECT * FROM email_accounts WHERE user_id = $1"
       const result = await checkAuthAndQuery(query, [context.user.id], context);
       return result.rows;
     },

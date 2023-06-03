@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:html": "npx ts-node scripts/load-test-email-template.ts",
     "setup:db": "npx ts-node scripts/setup-db.ts",
-    "cron:all": "npx ts-node cronJobs/index.ts",
+    "cron:all": "npx --max-old-space-size=4096 ts-node cronJobs/index.ts",
     "cron:campaigns": "npx ts-node cronJobs/run-campaigns.ts",
     "cron:limit": "npx ts-node cronJobs/reset-campaign-daily-limits.ts",
     "cron:valid-emails": "npx ts-node cronJobs/check-valid-email-accounts.ts",

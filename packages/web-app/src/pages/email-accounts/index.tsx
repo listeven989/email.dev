@@ -19,7 +19,7 @@ import { useEffect, useState } from "react";
 
 const GET_EMAIL_ACCOUNTS = gql`
   query GetEmailAccounts {
-    emailAccounts {
+    emailAccounts(all: true) {
       id
       email_address
       display_name
@@ -29,19 +29,20 @@ const GET_EMAIL_ACCOUNTS = gql`
       password
       is_valid
       spam
+      error_message
     }
   }
 `;
 
 const EmailAccounts = () => {
   const { loading, error, data } = useQuery(GET_EMAIL_ACCOUNTS);
-const [emailAccounts,setEmailAccounts] = useState<any>([])
+  const [emailAccounts, setEmailAccounts] = useState<any>([])
 
 
   useEffect(() => {
     if (data) {
       const tempEmails = [...data.emailAccounts]
-      tempEmails.sort((a:any,b:any) => a.is_valid ? -1 : 1)
+      tempEmails.sort((a: any, b: any) => a.is_valid ? -1 : 1)
       setEmailAccounts(tempEmails);
     }
   }, [data]);
@@ -100,19 +101,19 @@ const [emailAccounts,setEmailAccounts] = useState<any>([])
                 </Th>
 
                 <Th color="white" fontWeight="bold">
-                  Goes to Spam
+                  Error
                 </Th>
               </Tr>
             </Thead>
             <Tbody>
               {emailAccounts.map((account: any) => (
-                <Tr color={account.is_valid ? "null" : "red" } key={account.id}>
+                <Tr color={account.is_valid ? "null" : "red"} key={account.id}>
                   <Td>{account.email_address}</Td>
                   <Td>{account.display_name}</Td>
                   <Td>{account.smtp_host}</Td>
                   <Td>{account.smtp_port}</Td>
                   <Td>{account.username}</Td>
-                  <Td>{account.spam?.toString()}</Td>
+                  <Td maxW={"400px"}>{account.spam ? "Goes to Spam" : (account.is_valid ? "--" : account.error_message)}</Td>
 
                 </Tr>
               ))}

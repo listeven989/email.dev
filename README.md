@@ -1,6 +1,6 @@
 # Why?
 
-You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, lem something, or something else). Your email outbounds are running great. 
+You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, replyio, lem something, ...). Your email outbounds are running great. 
 
 Until you realize you need X feature. 
 
@@ -8,13 +8,13 @@ That feature could ability to send long HTML emails. Or link tracking. Or figuri
 
 Then you realize you are missing Y feature. Then, Z feature. And you _really_ need that Z feature for that next campaign.
 
-**Boom.**
+**Whack.**
 
-Now you need to look for another email outbound alternative to do that X, Y, and Z feature. 
+Now you need to look for another email outbound alternative to do that X, Y, and Z feature. **again**
 
 You spend hours digging through sites and forums testing different ones out.
 
-**_And another hour_**
+**_Hours later_**
 
 Ok, now you found one. 
 

@@ -66,7 +66,8 @@ async function checkSpamEmails() {
 
     console.log({ token })
 
-    emailAccounts.rows.forEach(async (emailAccount: any) => {
+    for (let i = 0; i < emailAccounts.rows.length; i++) {
+        const emailAccount = emailAccounts.rows[i];
 
         try {
             const transporter = createTransport({
@@ -119,9 +120,9 @@ async function checkSpamEmails() {
         } catch (error) {
             console.error("Error sending spam email check for:", emailAccount.from_email, error);
         }
+    }
 
-
-    });
+   await client.end();
 }
 
 const CRON_SCHEDULE = "0 0 * * *";

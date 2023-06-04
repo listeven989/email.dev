@@ -99,9 +99,9 @@ async function checkValidEmailAccounts() {
             await client.query(deleteQuery, [emailAccount.id]);
 
         }
-
-
     });
+
+    await client.end();
 }
 
 

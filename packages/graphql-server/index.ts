@@ -57,6 +57,7 @@ const typeDefs = gql`
     updated_at: String!
     is_valid: Boolean!
     spam: Boolean
+    spam_updated_at : String
     error_message: String
   }
 

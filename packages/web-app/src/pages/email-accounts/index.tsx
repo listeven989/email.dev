@@ -30,6 +30,7 @@ const GET_EMAIL_ACCOUNTS = gql`
       is_valid
       spam
       error_message
+      spam_updated_at
     }
   }
 `;
@@ -103,17 +104,27 @@ const EmailAccounts = () => {
                 <Th color="white" fontWeight="bold">
                   Error
                 </Th>
+
+                <Th color="white" fontWeight="bold">
+                  Status Checks
+                </Th>
+
               </Tr>
             </Thead>
             <Tbody>
               {emailAccounts.map((account: any) => (
                 <Tr color={account.is_valid ? "null" : "red"} key={account.id}>
-                  <Td>{account.email_address}</Td>
+                  <Td  maxW={"200px"}>{account.email_address}</Td>
                   <Td>{account.display_name}</Td>
-                  <Td>{account.smtp_host}</Td>
+                  <Td  maxW={"200px"}>{account.smtp_host}</Td>
                   <Td>{account.smtp_port}</Td>
-                  <Td>{account.username}</Td>
-                  <Td maxW={"400px"}>{account.spam ? "Goes to Spam" : (account.is_valid ? "--" : account.error_message)}</Td>
+                  <Td  maxW={"200px"}>{account.username}</Td>
+                  <Td maxW={"200px"}>{account.is_valid ? "--" : account.error_message}</Td>
+                  <Td maxW={"300px"}>{!account.spam_updated_at ? "--" :
+                    (account.spam ? `Emails from this account are landing in the spam folder for gmail.`
+                      :
+                    `Emails from this account are landing in inbox for gmail.`) + ` Last check ${new Date(parseInt(account.spam_updated_at)).toLocaleString()}`}</Td>
+
 
                 </Tr>
               ))}

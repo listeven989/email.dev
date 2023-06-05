@@ -107,13 +107,19 @@ async function checkSpamEmails() {
 
                 // update email account to be invalid
                 const updateEmailAccountSpamQuery = `
-                UPDATE email_accounts SET spam = false   
+                UPDATE email_accounts SET spam = true , spam_updated_at = now()   
                 WHERE email_accounts.id = $1
                 `;
                 await client.query(updateEmailAccountSpamQuery, [emailAccount.id]);
 
             } else {
                 console.log('Email did not end up in the spam folder for:', emailAccount.from_email);
+
+                const updateEmailAccountSpamQuery = `
+                UPDATE email_accounts SET spam = false , spam_updated_at = now()   
+                WHERE email_accounts.id = $1
+                `;
+                await client.query(updateEmailAccountSpamQuery, [emailAccount.id]);
             }
 
 

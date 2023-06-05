@@ -63,14 +63,14 @@ app.get("/link/:linkId", async (req, res) => {
 
   // Get the original URL from the database
   const query = `
-    UPDATE link_clicks SET click_count = click_count + 1 WHERE id = $1 RETURNING url;
+    UPDATE link_clicks SET click_count = click_count + 1 WHERE id = $1 RETURNING url,recipient_email_id;
   `;
 
   try {
     // log preparing to redirect and id
     console.log("Preparing to redirect: ", linkId);
     const result = await pool.query(query, [linkId]);
-    let url = result.rows[0].url;
+    let { url, recipient_email_id } = result.rows[0];
 
     // check if url has https:// otherwise append it
     if (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("mailto:")) {
@@ -79,12 +79,14 @@ app.get("/link/:linkId", async (req, res) => {
 
     console.log("Url acquired from database. Redirecting to: ", url);
 
-    // TODO INJECT CUSTOM URL QUERY PARAMETERS INTO THE URL
-    url = new URL(url);
+    // inject email query parameter
+    const recipientQuery = `SELECT email_address FROM recipient_emails WHERE id = $1`;
 
-    // VALUES CAN BE QUERIED FROM THE DATABASE
-    // url.searchParams.append('email_address', 'value1'); // append a query parameter
-    // url.searchParams.append('param2', 'value2'); // append another query parameter
+    const recipientResult = await pool.query(recipientQuery, [recipient_email_id]);
+    let { email_address } = recipientResult.rows[0];
+
+    url = new URL(url);
+    url.searchParams.append('email_address', email_address);
 
     res.redirect(url.toString());
   } catch (error) {

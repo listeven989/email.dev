@@ -108,8 +108,8 @@ async function checkValidEmailAccounts() {
 }
 
 
-// const CRON_SCHEDULE = "0 * * * *";
-const CRON_SCHEDULE = "* * * * *";
+const CRON_SCHEDULE = "0 * * * *";
+// const CRON_SCHEDULE = "* * * * *";
 
 cron.schedule(CRON_SCHEDULE, () => {
     const now = new Date();

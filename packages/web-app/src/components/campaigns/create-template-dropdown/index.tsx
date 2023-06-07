@@ -16,7 +16,7 @@ import {
     Collapse,
 } from "@chakra-ui/react";
 import { gql, useMutation } from '@apollo/client';
-import { GET_EMAIL_TEMPLATES } from '@/pages/campaigns/add_template_and_recipients';
+import { GET_EMAIL_TEMPLATES } from '@/pages/campaigns/add_recipients';
 
 type Props = {
     show: boolean

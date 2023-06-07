@@ -8,14 +8,12 @@ import {
     FormControl,
     FormLabel,
     Select,
-    Textarea,
-    VStack,
-    Radio,
-    RadioGroup,
-    Stack,
-    Input,
-    Text,
-    Collapse,
+    NumberInput,
+    NumberInputField,
+    NumberInputStepper,
+    NumberIncrementStepper,
+    NumberDecrementStepper,
+    HStack,
 } from "@chakra-ui/react";
 import CreateTemplateDropdown from '@/components/campaigns/create-template-dropdown';
 import ViewTemplate from '@/components/ViewTemplate';
@@ -35,23 +33,22 @@ const GET_EMAIL_TEMPLATES = gql`
   }
 `;
 
-const SET_TEMPLATE = gql`
+const SET_TEMPLATES = gql`
   mutation SetTemplate(
     $campaignId: ID!
-    $emailTemplateId: ID!
+    $emailTemplateIds: [EmailTemplateIdInput]!
   ) {
-    updateCampaignTemplate(id: $campaignId, email_template_id: $emailTemplateId) {
-      id
-    }
+    updateCampaignTemplate(id: $campaignId, email_template_ids: $emailTemplateIds)
   }
 `;
 
 
 
-const GET_ACTIVE_TEMPLATE = gql`
+const GET_ACTIVE_TEMPLATES = gql`
   query GetActiveTemplate($campaignId: ID!) {
-    emailTemplateByCampaignId(campaignId: $campaignId) {
+    emailTemplatesByCampaignId(campaignId: $campaignId) {
      id
+     days_delay
     }
   }
 `;
@@ -61,23 +58,29 @@ export default function EmailTemplate({ }: Props) {
     const router = useRouter()
     const { id: campaignId } = router.query;
 
+
     const { loading, error, data } = useQuery(GET_EMAIL_TEMPLATES);
-    const { data: activeEmailTemplateQueryData } = useQuery(GET_ACTIVE_TEMPLATE,
+    const { data: activeEmailTemplatesQueryData } = useQuery(GET_ACTIVE_TEMPLATES,
         { variables: { campaignId } }
     );
 
-    const [setTemplate] = useMutation(SET_TEMPLATE, {
+    const [setTemplate] = useMutation(SET_TEMPLATES, {
         refetchQueries: [
             {
                 query: GET_CAMPAIGN,
                 variables: { id: campaignId },
+            },
+            {
+                query: GET_ACTIVE_TEMPLATES,
+                variables: { campaignId }
             }
         ]
     });
-    const [emailTemplateId, setEmailTemplateId] = useState("");
     const [showNewTemplateForm, setShowNewTemplateForm] = useState(false);
 
+    const [selectedEmailTemplateIds, setSelectedEmailTemplateIds] = useState<{ id: string, days_delay?: number }[]>([{ id: '', days_delay: 0 }]);
 
+    console.log({ selectedEmailTemplateIds })
 
     /**
      * 
@@ -88,18 +91,23 @@ export default function EmailTemplate({ }: Props) {
         await setTemplate({
             variables: {
                 campaignId,
-                emailTemplateId,
+                emailTemplateIds: selectedEmailTemplateIds.filter((template) => template.id !== ''),
             },
         });
-        router.push(`/campaigns/${campaignId}`);
+        if (router.query?.newCampaign) {
+            router.push(`/campaigns/add_recipients?campaignId=${campaignId}`)
+        } else {
+            router.push(`/campaigns/${campaignId}`);
+        }
     };
 
 
     useEffect(() => {
-        if (activeEmailTemplateQueryData && activeEmailTemplateQueryData.emailTemplateByCampaignId) {
-            setEmailTemplateId(activeEmailTemplateQueryData.emailTemplateByCampaignId.id);
+        if (activeEmailTemplatesQueryData?.emailTemplatesByCampaignId?.length > 0) {
+            const cleanTemplates = activeEmailTemplatesQueryData.emailTemplatesByCampaignId.map(({ __typename, ...template }: any) => template)
+            setSelectedEmailTemplateIds(cleanTemplates)
         }
-    }, [activeEmailTemplateQueryData]);
+    }, [activeEmailTemplatesQueryData]);
 
 
     if (loading) return <p>Loading...</p>;
@@ -108,47 +116,120 @@ export default function EmailTemplate({ }: Props) {
 
     const emailTemplates = data.emailTemplates;
 
-    const selectedTemplate = emailTemplates.find(
-        (template: any) => template.id === emailTemplateId
-    );
+
 
     return (
         <Container maxW="container.md" py={12}>
-            <VStack as="form" onSubmit={handleSubmit} spacing={6} align="start">
-                <FormControl id="emailTemplate">
-                    <FormLabel>Email Template</FormLabel>
-                    <Select
-                        placeholder="Select email template"
-                        value={emailTemplateId}
-                        onChange={(e) => {
-                            if (e.target.value === "create_new") {
-                                setShowNewTemplateForm(true);
-                            } else {
-                                setEmailTemplateId(e.target.value);
-                                setShowNewTemplateForm(false);
-                            }
-                        }}
-                    >
-                        {emailTemplates.map((template: any) => (
-                            <option key={template.id} value={template.id}>
-                                {template.name}
-                            </option>
-                        ))}
-                        <option value="create_new">Create New Email Template</option>
-                    </Select>
+            {selectedEmailTemplateIds.map(({ days_delay, id }, index) => {
+                const selectedTemplate = emailTemplates.find(
+                    (template: any) => template.id === id
+                );
 
-                    <CreateTemplateDropdown
-                        setShow={setShowNewTemplateForm}
-                        show={showNewTemplateForm} />
+                return <>
 
-                    {selectedTemplate && (
-                        <ViewTemplate template={selectedTemplate} />
-                    )}
-                </FormControl>
-                <Button type="submit" colorScheme="blue">
-                    Save
-                </Button>
-            </VStack>
-        </Container>
+                    {index !== 0 && <Box marginY={4}>
+                        <FormLabel>Send After {days_delay} Day(s) from the previous email</FormLabel>
+
+                        <NumberInput
+                            min={1}
+                            onChange={(e) => {
+                                console.log({ e })
+                                setSelectedEmailTemplateIds(ids => {
+                                    const tempIds = [...ids];
+                                    tempIds[index] = { ...tempIds[index], days_delay: parseInt(e) };
+                                    return tempIds;
+                                })
+
+                            }}
+                            value={days_delay} >
+                            <NumberInputField />
+                            <NumberInputStepper>
+                                <NumberIncrementStepper />
+                                <NumberDecrementStepper />
+                            </NumberInputStepper>
+                        </NumberInput>
+                    </Box>}
+
+                    <Box
+                        key={index}
+                        padding={4}
+                        borderRadius={6}
+                        borderColor={'gray.100'}
+                        border={'1px'}>
+
+
+
+                        <FormControl id="emailTemplate">
+                            <HStack justifyContent={'space-between'}>
+                                <FormLabel>Email Template</FormLabel>
+
+                                {index !== 0 &&
+                                    <Button
+
+                                        size={"xs"}
+                                        onClick={() => setSelectedEmailTemplateIds(ids => [...ids].filter((_, i) => i !== index))}
+                                        colorScheme="red">
+                                        Remove
+                                    </Button>
+                                }
+                            </HStack>
+                            <Select
+                                placeholder="Select email template"
+                                value={id}
+                                onChange={(e) => {
+                                    if (e.target.value === "create_new") {
+                                        setShowNewTemplateForm(true);
+                                    } else {
+                                        setSelectedEmailTemplateIds(ids => {
+                                            const tempIds = [...ids];
+                                            tempIds[index] = { ...tempIds[index], id: e.target.value };
+                                            return tempIds;
+                                        })
+
+                                        setShowNewTemplateForm(false);
+                                    }
+                                }}
+                            >
+                                {emailTemplates.map((template: any) => (
+                                    <option key={template.id} value={template.id}>
+                                        {template.name}
+                                    </option>
+                                ))}
+                                <option value="create_new">Create New Email Template</option>
+                            </Select>
+
+                            <CreateTemplateDropdown
+                                setShow={setShowNewTemplateForm}
+                                show={showNewTemplateForm} />
+
+                            {selectedTemplate && (
+                                <ViewTemplate template={selectedTemplate} />
+                            )}
+                        </FormControl>
+                    </Box>
+
+                </>
+            })}
+
+
+
+            <Button
+                marginTop={4}
+                onClick={handleSubmit}
+                colorScheme="blue">
+                Save
+            </Button>
+
+            <Button
+                borderWidth={1}
+                color={'gray.500'}
+                borderColor={'gray.300'}
+                marginTop={4}
+                marginLeft={4}
+                onClick={() => setSelectedEmailTemplateIds(ids => [...ids, { id: '', days_delay: 1 }])}
+                colorScheme="white">
+                Add Email Template
+            </Button>
+        </Container >
     )
 }

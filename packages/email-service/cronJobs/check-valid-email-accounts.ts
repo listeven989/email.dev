@@ -40,7 +40,7 @@ async function checkValidEmailAccounts() {
     const emailAccounts = await client.query(emailAccountsQuery);
 
 
-    emailAccounts.rows.forEach(async (emailAccount: any) => {
+    await Promise.all(emailAccounts.rows.map(async (emailAccount: any) => {
 
         try {
             const transporter = createTransport({
@@ -99,14 +99,17 @@ async function checkValidEmailAccounts() {
             await client.query(deleteQuery, [emailAccount.id]);
 
         }
-    });
+    }));
+
+
+
 
     await client.end();
 }
 
 
-const CRON_SCHEDULE = "0 * * * *";
-// const CRON_SCHEDULE = "* * * * *";
+// const CRON_SCHEDULE = "0 * * * *";
+const CRON_SCHEDULE = "* * * * *";
 
 cron.schedule(CRON_SCHEDULE, () => {
     const now = new Date();

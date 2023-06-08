@@ -84,6 +84,7 @@ const typeDefs = gql`
     daily_limit: Int
     emails_sent_today: Int
     status: String!
+    error: String
   }
 
   type RecipientEmail {
@@ -359,7 +360,7 @@ const resolvers = {
       return result.rows;
     },
     emailAccounts: async (_: any, { all }: any, context: { user: any }) => {
-      const query = all ?  "SELECT * FROM email_accounts WHERE user_id = $1": "SELECT * FROM email_accounts WHERE user_id = $1 AND is_valid=true"
+      const query = all ? "SELECT * FROM email_accounts WHERE user_id = $1" : "SELECT * FROM email_accounts WHERE user_id = $1 AND is_valid=true"
       const result = await checkAuthAndQuery(query, [context.user.id], context);
       return result.rows;
     },
@@ -708,6 +709,11 @@ const resolvers = {
         "UPDATE campaigns SET status = $1 WHERE id = $2 RETURNING *",
         [status, id]
       );
+
+      if (status = 'active') {
+        await pool.query(`  UPDATE campaigns SET error = '' WHERE id = $1`, [id]);
+      }
+
       return result.rows[0];
     },
     updateCampaignTemplate: async (_: any, { id, email_template_id }: any) => {

@@ -339,13 +339,12 @@ async function pauseCampaignOnError(
 ) {
   const updateCampaignQuery = `
     UPDATE campaigns
-    SET status = 'paused', name = $1, error = $3
+    SET status = 'paused', error = $1
     WHERE id = $2
   `;
   await client.query(updateCampaignQuery, [
-    `${campaignName} [AUTO_PAUSED_DUE_TO_ERROR]`,
-    campaignId,
-    error,
+    error.message,
+    campaignId
   ]);
 }
 

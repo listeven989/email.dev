@@ -40,7 +40,7 @@ async function checkValidEmailAccounts() {
     const emailAccounts = await client.query(emailAccountsQuery);
 
 
-    emailAccounts.rows.forEach(async (emailAccount: any) => {
+    await Promise.all(emailAccounts.rows.map(async (emailAccount: any) => {
 
         try {
             const transporter = createTransport({
@@ -99,7 +99,10 @@ async function checkValidEmailAccounts() {
             await client.query(deleteQuery, [emailAccount.id]);
 
         }
-    });
+    }));
+
+
+
 
     await client.end();
 }

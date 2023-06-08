@@ -17,7 +17,10 @@ import {
   Flex,
   Badge,
   useColorModeValue,
+  Icon,
+  Tooltip
 } from "@chakra-ui/react";
+import { WarningTwoIcon } from "@chakra-ui/icons";
 
 const GET_CAMPAIGNS = gql`
   query GetCampaigns {
@@ -30,6 +33,7 @@ const GET_CAMPAIGNS = gql`
       status
       created_at
       updated_at
+      error
     }
   }
 `;
@@ -84,6 +88,7 @@ const CampaignRow = ({
     <Tr key={campaign.id}>
       <Td textAlign={"center"}>
         <Link href={`/campaigns/${campaign.id}`} passHref>
+
           <Text
             as="a"
             color="blue.500"
@@ -91,7 +96,13 @@ const CampaignRow = ({
             _hover={{ textDecoration: "underline" }}
           >
             {campaign.name}
+
           </Text>
+          {campaign.error &&
+            <Tooltip label={`Auto paused due to error: ${campaign.error}`}>
+              <WarningTwoIcon boxSize={6} color={"red.500"} />
+            </Tooltip>
+          }
         </Link>
       </Td>
       <Td textAlign={"center"}>{campaign.reply_to_email_address}</Td>
@@ -111,8 +122,8 @@ const CampaignRow = ({
             campaign.status === "active"
               ? "green"
               : campaign.status === "completed"
-              ? "purple"
-              : "red"
+                ? "purple"
+                : "red"
           }
           borderRadius="md"
           px={2}

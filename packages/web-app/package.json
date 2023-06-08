@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.7.14",
+    "@chakra-ui/icons": "^2.0.19",
     "@chakra-ui/react": "^2.6.1",
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
@@ -33,6 +34,7 @@
     "pg": "^8.10.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-icons": "^4.9.0",
     "typescript": "5.0.4"
   },
   "devDependencies": {

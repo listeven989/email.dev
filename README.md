@@ -1,16 +1,14 @@
 # Why?
 
-You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, replyio, lem something, ...). Your email outbounds are running great. 
+You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, replyio, lem something). Your email outbounds are running great. 
 
-Until you realize you need X feature. 
+Then, you realize you need X feature. Or Y feature is broken in your current email tool. (Html emails coming out horribly wrong anyone?)
 
-That feature could ability to send long HTML emails. Or link tracking. Or figuring out the exact person who clicked into that specific link in your spiffy new email copy.
-
-Then you realize you are missing Y feature. Then, Z feature. And you _really_ need that Z feature for that next campaign.
+Opens tracking are horribly inaccurate. Link tracking is missing.
 
 **Whack.**
 
-Now you need to look for another email outbound alternative to do that X, Y, and Z feature. **again**
+Now you need to look for another email outbound alternative to do that X, Y, and Z feature or fix that A, B, C feature. **again**
 
 You spend hours digging through sites and forums testing different ones out.
 
@@ -32,13 +30,19 @@ Re-setup up all your campaigns...
 
 **There's a crazy idea:**
 
-_Why not just code that feature for your existing email tool?_
+```
+Why not just code that feature for your existing email tool?
+```
 
-That's what this is for. The completely open sourced email outbound saas app. If you need any features just code it, open a PR and viola, once its merged to main, it's live.
+That's what this is for. 
 
-You can use it here: https://email-outbound-ai-web-app.vercel.app. Or go ahead and host your own version.
+The completely open-sourced email outbound saas app. 
 
-Ok, but you're not a dev you say? No problemo, just ask the devs to make that spiffy feature you need. Go to https://github.com/steven4354/email-outbound-ai/issues and open a request
+You can do email outbounds. You can do mailchimp like newsletters. And much, much more.
+
+Best of all, if you need any features - just code it, open a PR, and _viola_ - once its merged to main - it's live.
+
+You can use it here: https://emaildev.vercel.app. Or go ahead and host your own version.
 
 ## Current Features
 

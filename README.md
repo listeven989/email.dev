@@ -37,12 +37,14 @@ Re-setup up all your campaigns...
 **There's a crazy idea:**
 
 ```
+
 Why not just code that feature for your existing email tool?
+
 ```
 
 That's what this is for. 
 
-The completely open-sourced email outbound saas app. 
+The completely open-sourced email outbound saas app. You own all the code and can change anything. You can host your own, or use our hosted version.
 
 You can do email outbounds. You can do mailchimp like newsletters. And much, much more.
 

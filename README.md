@@ -1,10 +1,16 @@
 # Why?
 
-You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, replyio, lem something). Your email outbounds are running great. 
+You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, replyio, lem something). 
 
-Then, you realize you need X feature. Or Y feature is broken in your current email tool. (Html emails coming out horribly wrong anyone?)
+Your email outbounds are running great. 
 
-Opens tracking are horribly inaccurate. Link tracking is missing.
+Then, you realize you need X feature. Or Y feature is broken in your current email tool. 
+
+Html emails coming out horribly wrong anyone?
+
+Opens tracking are horribly inaccurate. 
+
+Link tracking is missing?
 
 **Whack.**
 

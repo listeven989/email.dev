@@ -14,7 +14,7 @@ Link tracking is missing?
 
 **Whack.**
 
-Now you need to look for another email outbound alternative to do that X, Y, and Z feature or fix that A, B, C feature. **again**
+Now you need to look for another email outbound alternative to do that X, Y, and Z feature or fix that A, B, C feature. _AGAIN_
 
 You spend hours digging through sites and forums testing different ones out.
 

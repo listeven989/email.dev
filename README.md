@@ -18,7 +18,7 @@ Now you need to look for another email outbound alternative to do that X, Y, and
 
 You spend hours digging through sites and forums testing different ones out.
 
-**Hours later**
+**Hours later.**
 
 Ok, now you found one. 
 
@@ -34,7 +34,7 @@ Re-setup up all your campaigns...
 
 - Wait a second....
 
-**There's a crazy idea:**
+**Here's a crazy idea.**
 
 ```
 

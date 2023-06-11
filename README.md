@@ -26,7 +26,7 @@ Time to move all your campaigns to a new tool.
 
 Figure out which people you already emailed or haven't. 
 
-Re-setup up all your campaigns......
+Re-setup up all your campaigns.
 
 ......But wait.....
 

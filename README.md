@@ -18,7 +18,7 @@ Now you need to look for another email outbound alternative to do that X, Y, and
 
 You spend hours digging through sites and forums testing different ones out.
 
-**_Hours later_**
+**Hours later**
 
 Ok, now you found one. 
 

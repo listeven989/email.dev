@@ -22,11 +22,7 @@ You spend hours digging through sites and forums testing different ones out.
 
 Ok, now you found one. 
 
-Time to move all your campaigns to a new tool. 
-
-Figure out which people you already emailed or haven't. 
-
-Re-setup up all your campaigns.
+Time to move all your campaigns to a new tool. Figure out which people you already emailed or haven't.  Re-setup up all your campaigns.
 
 But wait.....
 

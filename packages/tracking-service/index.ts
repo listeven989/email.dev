@@ -62,21 +62,46 @@ app.get("/link/:linkId", async (req, res) => {
   linkId = linkId.replace(":", "");
 
   const userAgent = req.headers['user-agent'];
-  
-  // Get the original URL from the database
-  const query = `
-    UPDATE link_clicks SET user_agent=$2, click_count = click_count + 1 WHERE id = $1 RETURNING url,recipient_email_id;
-  `;
+
+  const INVALID_USER_AGENTS = [
+    'BarracudaCentral.org/LinkProtection',
+    'Symantec URL Content Check',
+    'GoogleSafeBrowsing/4.0',
+    'Microsoft Office Protocol Discovery'
+  ]
+
+  function isInvalidUserAgent() {
+    const lowerCaseUserAgent = userAgent?.toLowerCase();
+    return INVALID_USER_AGENTS.some(invalidAgent => invalidAgent.toLowerCase() === lowerCaseUserAgent);
+  }
 
   try {
-    // log preparing to redirect and id
-    console.log("Preparing to redirect: ", linkId);
-    const result = await pool.query(query, [linkId,userAgent]);
-    let { url, recipient_email_id } = result.rows[0];
 
-    // check if url has https:// otherwise append it
-    if (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("mailto:")) {
-      url = `https://${url}`;
+    let url: any, recipient_email_id: any
+
+    if (isInvalidUserAgent()) {
+      // dont record the click
+      const result = await pool.query("SELECT * FROM link_clicks WHERE id=$1", [linkId]);
+      const response = result.rows[0];
+      url = response.url
+      recipient_email_id = response.recipient_email_id
+
+    } else {
+      // Get the original URL from the database
+      const query = `
+  UPDATE link_clicks SET user_agent=$2, click_count = click_count + 1 WHERE id = $1 RETURNING url,recipient_email_id;
+`;
+
+      // log preparing to redirect and id
+      console.log("Preparing to redirect: ", linkId);
+      const result = await pool.query(query, [linkId, userAgent]);
+      const response = result.rows[0];
+      url = response.url
+      recipient_email_id = response.recipient_email_id
+      // check if url has https:// otherwise append it
+      if (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("mailto:")) {
+        url = `https://${url}`;
+      }
     }
 
     console.log("Url acquired from database. Redirecting to: ", url);

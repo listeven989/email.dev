@@ -42,6 +42,7 @@ const typeDefs = gql`
     email_address: String!
     last_clicked_at: String
     recipient_email: RecipientEmail!
+    user_agent: String
   }
 
   type EmailAccount {

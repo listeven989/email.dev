@@ -34,7 +34,7 @@ export const GET_CAMPAIGN = gql`
       created_at
       updated_at
     }
-    emailTemplateByCampaignId(campaignId: $id) {
+    emailTemplatesByCampaignId(campaignId: $id) {
       id
       name
       subject

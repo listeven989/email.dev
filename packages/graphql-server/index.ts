@@ -71,6 +71,12 @@ const typeDefs = gql`
     html_content: String
     created_at: String!
     updated_at: String!
+    days_delay: Int
+  }
+
+  input EmailTemplateIdInput {
+    id: ID!
+    days_delay: Int
   }
 
   type Campaign {
@@ -113,7 +119,7 @@ const typeDefs = gql`
     campaigns: [Campaign]
     campaign(id: ID!): Campaign
     recipientEmails(campaignId: ID!): [RecipientEmail]
-    emailTemplateByCampaignId(campaignId: ID!): EmailTemplate
+    emailTemplatesByCampaignId(campaignId: ID!): [EmailTemplate]
     emailTemplate(id: ID!): EmailTemplate
     recipientsWhoReadEmail(campaignId: ID!): [RecipientReadInfo]
     linkClicksByCampaign(campaignId: ID!): [LinkClick]
@@ -148,7 +154,7 @@ const typeDefs = gql`
     ): EmailAccount
 
     updateCampaignStatus(id: ID!, status: String!): Campaign
-    updateCampaignTemplate(id: ID!, email_template_id: ID!): Campaign
+    updateCampaignTemplate(id: ID!, email_template_ids: [EmailTemplateIdInput]!): Boolean
 
     createEmailTemplate(
       name: String!
@@ -307,37 +313,37 @@ const resolvers = {
       };
     },
 
-    emailTemplateByCampaignId: async (
+    emailTemplatesByCampaignId: async (
       _: any,
       { campaignId }: { campaignId: string },
       context: { user: any }
     ) => {
-      const campaignQuery =
-        "SELECT email_template_id FROM campaigns WHERE id = $1 AND user_id = $2";
-      const campaignResult = await checkAuthAndQuery(
-        campaignQuery,
-        [campaignId, context.user.id],
+      const templates: any = []
+
+      const campaignSequenceQuery =
+        "SELECT email_template_id, days_delay FROM campaign_sequence WHERE campaign_id = $1 ORDER BY sequence_order ASC";
+
+      const campaignSequenceResult = await checkAuthAndQuery(
+        campaignSequenceQuery,
+        [campaignId],
         context
       );
-      throwErrorIfNotFound(
-        campaignResult.rows,
-        "Campaign not found or not authorized"
-      );
 
-      const templateId = campaignResult.rows[0].email_template_id;
-      const query =
-        "SELECT * FROM email_templates WHERE id = $1 AND user_id = $2";
-      const result = await checkAuthAndQuery(
-        query,
-        [templateId, context.user.id],
-        context
-      );
-      throwErrorIfNotFound(
-        result.rows,
-        "Email template not found or not authorized"
-      );
+      for (let i = 0; i < campaignSequenceResult.rows.length; i++) {
+        const campaignSequence = campaignSequenceResult.rows[i]
 
-      return result.rows[0];
+        const query =
+          "SELECT * FROM email_templates WHERE id = $1";
+        const result = await checkAuthAndQuery(
+          query,
+          [campaignSequence.email_template_id],
+          context
+        );
+        if (result.rows.length === 0) continue
+        templates.push({ ...result.rows[0], days_delay: campaignSequence.days_delay })
+      }
+
+      return templates
     },
     recipientEmails: async (
       _: any,
@@ -548,30 +554,33 @@ const resolvers = {
       // TODO - make this a setting in the UI
       let allowMultiCampaignRecipients = false;
 
+      // get the total number of template email that need to be sent to the recipients
+      const campaignResult = await pool.query(`SELECT COUNT(*) FROM campaign_sequence WHERE campaign_id=$1`, [campaign_id]);
+
       let query;
       let values;
       if (!allowMultiCampaignRecipients) {
         // If setting is off, don't insert email addresses that already exist
         query = `
-          INSERT INTO recipient_emails (campaign_id, email_address)
-          SELECT $1, email
+          INSERT INTO recipient_emails (campaign_id, email_address,total_to_send)
+          SELECT $1, email, $3
           FROM unnest($2::varchar[]) AS t(email)
           LEFT JOIN recipient_emails re ON re.email_address = t.email
           WHERE re.email_address IS NULL
           RETURNING *;
         `;
-        values = [campaign_id, email_addresses];
+        values = [campaign_id, email_addresses, campaignResult.rows[0].count];
       } else {
         // Generate the bulk insert query and values
         query = `
-        INSERT INTO recipient_emails (campaign_id, email_address)
+        INSERT INTO recipient_emails (campaign_id,total_to_send, email_address)
         VALUES ${email_addresses
-            .map((_: any, i: number) => `($1, $${i + 2})`)
+            .map((_: any, i: number) => `($1,$2, $${i + 3})`)
             .join(", ")}
         ON CONFLICT ON CONSTRAINT unique_campaign_email DO NOTHING
         RETURNING *;
         `;
-        values = [campaign_id, ...email_addresses];
+        values = [campaign_id, campaignResult.rows[0].count, ...email_addresses];
       }
 
       // Execute the query
@@ -718,12 +727,48 @@ const resolvers = {
 
       return result.rows[0];
     },
-    updateCampaignTemplate: async (_: any, { id, email_template_id }: any) => {
-      const result = await pool.query(
-        "UPDATE campaigns SET email_template_id = $1 WHERE id = $2 RETURNING *",
-        [email_template_id, id]
+    updateCampaignTemplate: async (_: any, { id, email_template_ids }: any) => {
+      //delete old templates
+      const deletedResult = await pool.query(
+        "DELETE FROM campaign_sequence WHERE campaign_id = $1 RETURNING id,email_template_id,sequence_order",
+        [id]
       );
-      return result.rows[0];
+
+      const needToDeleteSentEmails: any[] = []
+
+      // determine which templates have been removed from the sequence
+      deletedResult.rows.forEach((deletedTemplate) => {
+        if (email_template_ids[parseInt(deletedTemplate.sequence_order)].id !== deletedTemplate.email_template_id) {
+          needToDeleteSentEmails.push(deletedTemplate)
+        }
+      })
+
+      // delete all the needToDeleteSentEmails
+      for (const deleteSentEmail of needToDeleteSentEmails) {
+        await pool.query(
+          "DELETE FROM sent_emails WHERE campaign_id = $1 AND email_template_id=$2",
+          [id, deleteSentEmail.email_template_id]
+        );
+      }
+
+      console.log({email_template_ids})
+      console.log({ deletedRows: deletedResult.rows })
+      console.log({ needToDeleteSentEmails })
+
+      let emailTemplates = email_template_ids.map((email_template_id: any, i: number) => ({ ...email_template_id, sequence_order: i }))
+      emailTemplates = emailTemplates.filter((emailTemplate: any) => emailTemplate.id !== '')
+
+      for (let i = 0; i < emailTemplates.length; i++) {
+        await pool.query(
+          "INSERT INTO campaign_sequence (campaign_id,email_template_id,sequence_order,days_delay) VALUES ($1, $2, $3, $4)",
+          [id, emailTemplates[i].id, emailTemplates[i].sequence_order, emailTemplates[i].days_delay]
+        );
+      }
+
+      // update the recipients new total emails
+      await pool.query("UPDATE recipient_emails SET total_to_send=$1 WHERE campaign_id=$2", [emailTemplates.length, id])
+
+      return true;
     },
   },
 };

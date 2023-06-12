@@ -98,13 +98,21 @@ async function sendCampaignEmails() {
 
         const transporter = createTransport(getTransporterConfig(emailAccount));
 
-        const sendMailOpts = await getSendMailOptions(
+        const mailOptionsResponse = await getSendMailOptions(
           client,
           campaign,
           recipient,
           emailAccount
         );
+
+        if (!mailOptionsResponse) continue
+
+        const [sendMailOpts, { emailTemplateId, nextSendAtDate }] = mailOptionsResponse
+
         await transporter.sendMail(sendMailOpts);
+
+        await client.query("INSERT INTO sent_emails(recipient_id, email_template_id,sent_at,campaign_id) VALUES ($1, $2, now(),$3)", [recipient.id, emailTemplateId,campaign.id])
+        await client.query("UPDATE recipient_emails SET next_send_date=$1, sent_count=sent_count + 1 WHERE id=$2", [nextSendAtDate, recipient.id])
 
         await incrementEmailsSentToday(client, campaign.campaign_id);
 
@@ -162,15 +170,42 @@ async function getSendMailOptions(
   recipient: any,
   emailAccount: any
 ) {
+
+  // determine which email has to be sent and whether to send
+
+  // count how many emails have already been sent to the user to determine which email to send next in the sequence
+  const emailCount = await client.query("SELECT COUNT(*) FROM sent_emails WHERE recipient_id = $1", [recipient.id])
+  const sentCount = emailCount.rows[0].count
+
+  const emailTemplateQuery = `
+SELECT cs.days_delay, et.* FROM email_templates AS et 
+JOIN campaign_sequence AS cs ON cs.email_template_id=et.id
+WHERE cs.sequence_order=$1 AND cs.campaign_id=$2
+  `
+  const emailTemplateResponse = await client.query(emailTemplateQuery, [sentCount, campaign.campaign_id])
+  if (emailTemplateResponse.rowCount === 0) return null
+  const emailTemplate = emailTemplateResponse.rows[0]
+
+  // compare whether the days delay from the last send are the same as the current day
+  //get the date of the last email sent
+  if (sentCount > 0) {
+    const lastEmailSentResponse = await client.query("SELECT sent_at FROM sent_emails WHERE recipient_id = $1 ORDER BY sent_at DESC LIMIT 1", [recipient.id])
+    const expectedDate = new Date(parseInt(lastEmailSentResponse.rows[0].sent_at))
+    expectedDate.setDate(expectedDate.getDate() + emailTemplate.days_delay)
+
+    // return null if current date is less than expected date
+    if (new Date() < expectedDate) return null
+  }
+
   const sendMailOpts: any = {
     from: `${emailAccount.display_name} <${emailAccount.from_email}>`,
     to: recipient.email_address,
-    subject: campaign.subject,
+    subject: emailTemplate.subject,
     replyTo: campaign.reply_to_email_address,
   };
 
   const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/newsletter-image/${recipient.id}" />`;
-  const $ = cheerio.load(campaign.html_content);
+  const $ = cheerio.load(emailTemplate.html_content);
 
   const links = $("a");
   for (let i = 0; i < links.length; i++) {
@@ -194,11 +229,21 @@ async function getSendMailOptions(
     sendMailOpts["html"] = $.html() + trackingPixelLink;
   }
 
-  if (campaign.text_content) {
-    sendMailOpts["text"] = campaign.text_content;
+  if (emailTemplate.text_content) {
+    sendMailOpts["text"] = emailTemplate.text_content;
   }
 
-  return sendMailOpts;
+  // determine the send at date for the next email
+  const nextSendAtDate = new Date()
+  const nextSequenceTemplate = await client.query(`
+  SELECT days_delay FROM campaign_sequence WHERE sequence_order=$1 AND campaign_id=$2
+    `, [sentCount + 1, campaign.campaign_id])
+
+  if (nextSequenceTemplate.rowCount > 0) {
+    nextSendAtDate.setDate(nextSendAtDate.getDate() + nextSequenceTemplate.rows[0].days_delay)
+  }
+
+  return [sendMailOpts, { emailTemplateId: emailTemplate.id, nextSendAtDate }];
 }
 
 type CampaignWithTemplate = {
@@ -220,14 +265,8 @@ type CampaignWithTemplate = {
 
 async function getCampaigns(client: Client): Promise<CampaignWithTemplate[]> {
   const campaignsQuery = `
-    SELECT 
-      campaigns.id AS campaign_id,
-      campaigns.*,
-      email_templates.subject,
-      email_templates.text_content,
-      email_templates.html_content
+    SELECT  *,id AS campaign_id
     FROM campaigns
-    JOIN email_templates ON campaigns.email_template_id = email_templates.id
     WHERE campaigns.status = 'active' AND campaigns.archive = false
   `;
   const campaignsResult = await client.query(campaignsQuery);
@@ -243,13 +282,15 @@ async function getRecipients(
     SELECT recipient_emails.id, recipient_emails.email_address
     FROM recipient_emails
     JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
-    WHERE recipient_emails.campaign_id = $1 AND recipient_emails.sent = false
+    WHERE recipient_emails.campaign_id = $1 AND recipient_emails.sent_count < recipient_emails.total_to_send
+    AND recipient_emails.next_send_date <= CURRENT_DATE
     LIMIT $2
   `;
   const recipientsResult = await client.query(recipientsQuery, [
     campaignId,
     maxToSend,
   ]);
+
   return recipientsResult.rows;
 }
 

@@ -56,7 +56,7 @@ const NewCampaign = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    if(selectedEmailAccountIds.length <= 0){
+    if (selectedEmailAccountIds.length <= 0) {
       setShowEmailAccountsRequiredError(true);
       return
     }
@@ -74,7 +74,7 @@ const NewCampaign = () => {
 
     const campaignId = data.createCampaign.id;
     router.push(
-      `/campaigns/add_template_and_recipients?campaignId=${campaignId}`
+      `/campaigns/${campaignId}/email-template?newCampaign=true`
     );
   };
 

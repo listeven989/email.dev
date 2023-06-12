@@ -21,7 +21,7 @@ import { GET_CAMPAIGN } from '.';
 
 type Props = {}
 
-const GET_EMAIL_TEMPLATES = gql`
+export const GET_EMAIL_TEMPLATES = gql`
   query GetEmailTemplates {
     emailTemplates {
       id

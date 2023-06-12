@@ -4,17 +4,15 @@ You spent 2 weeks setting up campaigns on your favorite email outbound tool (ins
 
 Your email outbounds are running great. 
 
-Then, you realize you need X feature. Or Y feature is broken in your current email tool. 
+Then, you realize you need X feature. 
 
-Html emails coming out horribly wrong anyone?
+Or Y feature is broken in your current email tool. 
 
-Opens tracking are horribly inaccurate. 
-
-Link tracking is missing?
+Html emails coming out horribly wrong? Opens tracking are horribly inaccurate. Link tracking is missing?
 
 **Whack.**
 
-Now you need to look for another email outbound alternative to do that X, Y, and Z feature or fix that A, B, C feature. _Again..._
+Now you need to look for another email outbound alternative to do that X, Y, and Z feature/bug. _Again..._
 
 You spend hours digging through sites and forums testing different ones out.
 
@@ -28,11 +26,11 @@ Figure out which people you already emailed or haven't.
 
 Re-setup up all your campaigns.
 
-......But wait.....
+But wait.....
 
-............Hold up............
+Hold up............
 
-..................Wait a second..................
+Wait a second..................
 
 **Here's a crazy idea.**
 

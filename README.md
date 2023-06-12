@@ -12,7 +12,9 @@ Html emails coming out horribly wrong? Opens tracking are horribly inaccurate. L
 
 **Whack.**
 
-Now you need to look for another email outbound alternative to do that X, Y, and Z feature/bug. _Again..._
+You email customer support. None of them are developers or do anything to fix your problem.
+
+So now you need to look for an alternative email outbound to do/fix that X, Y, and Z feature/bug. _Again..._
 
 You spend hours digging through sites and forums testing different ones out.
 
@@ -36,7 +38,9 @@ Wait a second..................
 
 ```
 
-Why not just code that feature for your existing email tool?
+Why not just code that feature for your existing email tool? Or fix that bug?
+
+What if everything was open sourced so that if the team doesn't fix your issue you can do it yourself?
 
 ```
 

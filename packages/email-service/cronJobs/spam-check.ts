@@ -83,7 +83,7 @@ async function checkSpamEmails() {
 
             const toEmail = "steven@trainingblockusa.com"
             const subject = "Hey " + generateRandomWord(5)
-            const text = "Hello world?"
+            const text = "Spam check -> checking if email arrives in inbox - email.dev"
 
             await transporter.sendMail({
                 from: `${emailAccount.display_name} <${emailAccount.from_email}>`,

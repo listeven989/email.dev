@@ -110,7 +110,7 @@ async function sendCampaignEmails() {
 
         await transporter.sendMail(sendMailOpts);
 
-        await client.query("INSERT INTO sent_emails(recipient_id, email_template_id,sent_at) VALUES ($1, $2, now())", [recipient.id, emailTemplateId])
+        await client.query("INSERT INTO sent_emails(recipient_id, email_template_id,sent_at,campaign_id) VALUES ($1, $2, now(),$3)", [recipient.id, emailTemplateId,campaign.id])
         await client.query("UPDATE recipient_emails SET next_send_date=$1, sent_count=sent_count + 1 WHERE id=$2", [nextSendAtDate, recipient.id])
 
         await incrementEmailsSentToday(client, campaign.campaign_id);

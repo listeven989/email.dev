@@ -721,10 +721,31 @@ const resolvers = {
     },
     updateCampaignTemplate: async (_: any, { id, email_template_ids }: any) => {
       //delete old templates
-      await pool.query(
-        "DELETE FROM campaign_sequence WHERE campaign_id = $1",
+      const deletedResult = await pool.query(
+        "DELETE FROM campaign_sequence WHERE campaign_id = $1 RETURNING id,email_template_id,sequence_order",
         [id]
       );
+
+      const needToDeleteSentEmails: any[] = []
+
+      // determine which templates have been removed from the sequence
+      deletedResult.rows.forEach((deletedTemplate) => {
+        if (email_template_ids[parseInt(deletedTemplate.sequence_order)].id !== deletedTemplate.email_template_id) {
+          needToDeleteSentEmails.push(deletedTemplate)
+        }
+      })
+
+      // delete all the needToDeleteSentEmails
+      for (const deleteSentEmail of needToDeleteSentEmails) {
+        await pool.query(
+          "DELETE FROM sent_emails WHERE campaign_id = $1 AND email_template_id=$2",
+          [id, deleteSentEmail.email_template_id]
+        );
+      }
+
+      console.log({email_template_ids})
+      console.log({ deletedRows: deletedResult.rows })
+      console.log({ needToDeleteSentEmails })
 
       let emailTemplates = email_template_ids.map((email_template_id: any, i: number) => ({ ...email_template_id, sequence_order: i }))
       emailTemplates = emailTemplates.filter((emailTemplate: any) => emailTemplate.id !== '')

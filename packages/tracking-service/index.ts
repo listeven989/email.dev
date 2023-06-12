@@ -61,15 +61,17 @@ app.get("/link/:linkId", async (req, res) => {
   // TODO(@steven4354): remove this
   linkId = linkId.replace(":", "");
 
+  const userAgent = req.headers['user-agent'];
+  
   // Get the original URL from the database
   const query = `
-    UPDATE link_clicks SET click_count = click_count + 1 WHERE id = $1 RETURNING url,recipient_email_id;
+    UPDATE link_clicks SET user_agent=$2, click_count = click_count + 1 WHERE id = $1 RETURNING url,recipient_email_id;
   `;
 
   try {
     // log preparing to redirect and id
     console.log("Preparing to redirect: ", linkId);
-    const result = await pool.query(query, [linkId]);
+    const result = await pool.query(query, [linkId,userAgent]);
     let { url, recipient_email_id } = result.rows[0];
 
     // check if url has https:// otherwise append it

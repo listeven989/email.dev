@@ -30,9 +30,9 @@ const pool = new Pool(connectionString);
 // Update email status in the database
 const updateEmailStatus = async (emailId: string) => {
   const query = `
-    UPDATE recipient_emails
-    SET read = read + 1, read_at = $1
-    WHERE id = $2 AND read >= 0
+    UPDATE sent_emails
+    SET read_count = read_count + 1, read_at = $1
+    WHERE id = $2 AND read_count >= 0
   `;
 
   try {
@@ -43,8 +43,8 @@ const updateEmailStatus = async (emailId: string) => {
 };
 
 // tracking endpoint but renamed to newsletter-image so that gmail doesn't block it
-app.get("/newsletter-image/:recipientEmailId", async (req, res) => {
-  let emailId = req.params.recipientEmailId;
+app.get("/newsletter-image/:sentEmailId", async (req, res) => {
+  let emailId = req.params.sentEmailId;
 
   console.log({ emailId });
 

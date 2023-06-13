@@ -44,6 +44,8 @@ export const GET_CAMPAIGN = gql`
     recipientsWhoReadEmail(campaignId: $id) {
       email_address
       read_count
+      template_id
+      template_subject
     }
     linkClicksByCampaign(campaignId: $id) {
       id
@@ -52,6 +54,8 @@ export const GET_CAMPAIGN = gql`
       last_clicked_at
       email_address
       user_agent
+      template_id
+      template_subject
     }
   }
 `;
@@ -158,6 +162,8 @@ const Campaign = () => {
                   <Th>Email Address</Th>
                   <Th>Open Count</Th>
                   <Th>Last Open Time</Th>
+                  <Th>Template Subject</Th>
+                  <Th>Template ID</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -166,6 +172,9 @@ const Campaign = () => {
                     <Td>{recipient.email_address}</Td>
                     <Td>{recipient.read_count}</Td>
                     <Td>{"not yet available"}</Td>
+                    <Td minW={350}>{recipient.template_subject}</Td>
+                    <Td>{recipient.template_id}</Td>
+
                   </Tr>
                 ))}
               </Tbody>
@@ -202,6 +211,8 @@ const Campaign = () => {
                   <Th>URL</Th>
                   <Th>Click Count</Th>
                   <Th>Last Clicked At</Th>
+                  <Th>Template Subject</Th>
+                  <Th>Template ID</Th>
                   <Th>User Agent</Th>
 
                 </Tr>
@@ -218,7 +229,8 @@ const Campaign = () => {
                     <Td>
                       {linkClick.last_clicked_at ? new Date(parseInt(linkClick.last_clicked_at)).toLocaleString() : "--"}
                     </Td>
-
+                    <Td minW={350}>{linkClick.template_subject}</Td>
+                    <Td>{linkClick.template_id}</Td>
                     <Td>{linkClick.user_agent}</Td>
 
                   </Tr>

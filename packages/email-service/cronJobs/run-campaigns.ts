@@ -98,20 +98,28 @@ async function sendCampaignEmails() {
 
         const transporter = createTransport(getTransporterConfig(emailAccount));
 
+        const sentEmailResponse = await client.query("INSERT INTO sent_emails(recipient_id,campaign_id) VALUES ($1,$2) RETURNING id", [recipient.id,campaign.id])
+
+        const sentEmailId = sentEmailResponse.rows[0].id
+
         const mailOptionsResponse = await getSendMailOptions(
           client,
           campaign,
           recipient,
-          emailAccount
+          emailAccount,
+          sentEmailId
         );
 
-        if (!mailOptionsResponse) continue
+        if (!mailOptionsResponse){
+        await client.query("DELETE FROM sent_emails WHERE id=$1", [sentEmailId])
+          continue
+        }
 
         const [sendMailOpts, { emailTemplateId, nextSendAtDate }] = mailOptionsResponse
 
         await transporter.sendMail(sendMailOpts);
 
-        await client.query("INSERT INTO sent_emails(recipient_id, email_template_id,sent_at,campaign_id) VALUES ($1, $2, now(),$3)", [recipient.id, emailTemplateId,campaign.id])
+        await client.query("UPDATE sent_emails SET email_template_id=$1, sent_at= now()", [emailTemplateId])
         await client.query("UPDATE recipient_emails SET next_send_date=$1, sent_count=sent_count + 1 WHERE id=$2", [nextSendAtDate, recipient.id])
 
         await incrementEmailsSentToday(client, campaign.campaign_id);
@@ -168,7 +176,8 @@ async function getSendMailOptions(
   client: Client,
   campaign: any,
   recipient: any,
-  emailAccount: any
+  emailAccount: any,
+  sentEmailId: string
 ) {
 
   // determine which email has to be sent and whether to send
@@ -204,7 +213,7 @@ WHERE cs.sequence_order=$1 AND cs.campaign_id=$2
     replyTo: campaign.reply_to_email_address,
   };
 
-  const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/newsletter-image/${recipient.id}" />`;
+  const trackingPixelLink = `<img src="${process.env.TRACKING_SERVICE_URL}/newsletter-image/${sentEmailId}" />`;
   const $ = cheerio.load(emailTemplate.html_content);
 
   const links = $("a");
@@ -212,8 +221,8 @@ WHERE cs.sequence_order=$1 AND cs.campaign_id=$2
     const link = links[i];
     const originalUrl = $(link).attr("href");
 
-    const query = `INSERT INTO link_clicks (url, recipient_email_id) VALUES ($1, $2) RETURNING id`;
-    const result = await client.query(query, [originalUrl, recipient.id]);
+    const query = `INSERT INTO link_clicks (url, recipient_email_id, email_template_id) VALUES ($1, $2, $3) RETURNING id`;
+    const result = await client.query(query, [originalUrl, recipient.id,emailTemplate.id]);
     const linkClickId = result.rows[0].id;
 
     $(link).attr(

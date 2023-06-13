@@ -43,6 +43,8 @@ const typeDefs = gql`
     last_clicked_at: String
     recipient_email: RecipientEmail!
     user_agent: String
+    template_id: String
+    template_subject: String
   }
 
   type EmailAccount {
@@ -111,6 +113,8 @@ const typeDefs = gql`
   type RecipientReadInfo {
     email_address: String!
     read_count: Int!
+    template_id: String
+    template_subject: String
   }
 
   type Query {
@@ -259,9 +263,12 @@ const resolvers = {
       );
 
       const query = `
-        SELECT email_address, read as read_count
-        FROM recipient_emails
-        WHERE campaign_id = $1 AND read > 0
+        SELECT re.email_address, se.read_count,et.subject AS template_subject,
+        et.id AS  template_id
+        FROM sent_emails AS se
+        JOIN recipient_emails AS re ON se.recipient_id =  re.id
+        JOIN email_templates AS et ON se.email_template_id = et.id
+        WHERE se.campaign_id = $1 AND se.read_count > 0
       `;
       const result = await checkAuthAndQuery(query, [campaignId], context);
       return result.rows;
@@ -375,9 +382,12 @@ const resolvers = {
     linkClicksByCampaign: async (_: any, { campaignId }: any) => {
       const query = `
         SELECT lc.*,
-        re.email_address
+        re.email_address,
+        et.id AS template_id,
+        et.subject AS template_subject
         FROM link_clicks AS lc
         JOIN recipient_emails AS re ON lc.recipient_email_id = re.id
+        JOIN email_templates AS et ON et.id = lc.email_template_id
         WHERE re.campaign_id = $1 AND lc.url IS NOT NULL
       `;
       const { rows } = await pool.query(query, [campaignId]);

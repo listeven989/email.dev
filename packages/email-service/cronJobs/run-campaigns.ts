@@ -76,7 +76,7 @@ async function sendCampaignEmails() {
 
         // Check that recipient is a valid email address
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,7}$/;
-        
+
         if (!emailRegex.test(recipient?.email_address)) {
           console.log("Invalid email address:", recipient?.email_address);
           continue;
@@ -98,7 +98,7 @@ async function sendCampaignEmails() {
 
         const transporter = createTransport(getTransporterConfig(emailAccount));
 
-        const sentEmailResponse = await client.query("INSERT INTO sent_emails(recipient_id,campaign_id) VALUES ($1,$2) RETURNING id", [recipient.id,campaign.id])
+        const sentEmailResponse = await client.query("INSERT INTO sent_emails(recipient_id,campaign_id) VALUES ($1,$2) RETURNING id", [recipient.id, campaign.id])
 
         const sentEmailId = sentEmailResponse.rows[0].id
 
@@ -110,8 +110,10 @@ async function sendCampaignEmails() {
           sentEmailId
         );
 
-        if (!mailOptionsResponse){
-        await client.query("DELETE FROM sent_emails WHERE id=$1", [sentEmailId])
+
+        if (!mailOptionsResponse) {
+          console.log({ mailOptionsResponse })
+          await client.query("DELETE FROM sent_emails WHERE id=$1", [sentEmailId])
           continue
         }
 
@@ -180,6 +182,7 @@ async function getSendMailOptions(
   sentEmailId: string
 ) {
 
+
   // determine which email has to be sent and whether to send
 
   // count how many emails have already been sent to the user to determine which email to send next in the sequence
@@ -198,9 +201,8 @@ WHERE cs.sequence_order=$1 AND cs.campaign_id=$2
   // compare whether the days delay from the last send are the same as the current day
   //get the date of the last email sent
   if (sentCount > 0) {
-    const lastEmailSentResponse = await client.query("SELECT sent_at FROM sent_emails WHERE recipient_id = $1 ORDER BY sent_at DESC LIMIT 1", [recipient.id])
-    const expectedDate = new Date(parseInt(lastEmailSentResponse.rows[0].sent_at))
-    expectedDate.setDate(expectedDate.getDate() + emailTemplate.days_delay)
+    const expectedDate = new Date(recipient.next_send_date)
+    console.log({ expectedDate: expectedDate.toLocaleString() })
 
     // return null if current date is less than expected date
     if (new Date() < expectedDate) return null
@@ -222,7 +224,7 @@ WHERE cs.sequence_order=$1 AND cs.campaign_id=$2
     const originalUrl = $(link).attr("href");
 
     const query = `INSERT INTO link_clicks (url, recipient_email_id, email_template_id) VALUES ($1, $2, $3) RETURNING id`;
-    const result = await client.query(query, [originalUrl, recipient.id,emailTemplate.id]);
+    const result = await client.query(query, [originalUrl, recipient.id, emailTemplate.id]);
     const linkClickId = result.rows[0].id;
 
     $(link).attr(
@@ -243,15 +245,16 @@ WHERE cs.sequence_order=$1 AND cs.campaign_id=$2
   }
 
   // determine the send at date for the next email
-  const nextSendAtDate = new Date()
+  let nextSendAtDate: any = new Date()
   const nextSequenceTemplate = await client.query(`
-  SELECT days_delay FROM campaign_sequence WHERE sequence_order=$1 AND campaign_id=$2
-    `, [sentCount + 1, campaign.campaign_id])
+    SELECT days_delay FROM campaign_sequence WHERE sequence_order=$1 AND campaign_id=$2
+      `, [parseInt(sentCount) + 1, campaign.campaign_id])
 
   if (nextSequenceTemplate.rowCount > 0) {
     nextSendAtDate.setDate(nextSendAtDate.getDate() + nextSequenceTemplate.rows[0].days_delay)
   }
 
+  console.log({ sentCount, nextSendAtDate: nextSendAtDate.toLocaleString() })
   return [sendMailOpts, { emailTemplateId: emailTemplate.id, nextSendAtDate }];
 }
 
@@ -287,8 +290,9 @@ async function getRecipients(
   campaignId: number,
   maxToSend: number
 ) {
+
   const recipientsQuery = `
-    SELECT recipient_emails.id, recipient_emails.email_address
+    SELECT recipient_emails.id, recipient_emails.email_address, recipient_emails.next_send_date
     FROM recipient_emails
     JOIN campaigns ON recipient_emails.campaign_id = campaigns.id
     WHERE recipient_emails.campaign_id = $1 AND recipient_emails.sent_count < recipient_emails.total_to_send

@@ -761,9 +761,6 @@ const resolvers = {
         );
       }
 
-      console.log({email_template_ids})
-      console.log({ deletedRows: deletedResult.rows })
-      console.log({ needToDeleteSentEmails })
 
       let emailTemplates = email_template_ids.map((email_template_id: any, i: number) => ({ ...email_template_id, sequence_order: i }))
       emailTemplates = emailTemplates.filter((emailTemplate: any) => emailTemplate.id !== '')

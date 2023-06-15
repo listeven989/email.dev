@@ -121,7 +121,7 @@ async function sendCampaignEmails() {
 
         await transporter.sendMail(sendMailOpts);
 
-        await client.query("UPDATE sent_emails SET email_template_id=$1, sent_at= now()", [emailTemplateId])
+        await client.query("UPDATE sent_emails SET email_template_id=$1, sent_at= now() WHERE id=$2", [emailTemplateId,sentEmailId])
         await client.query("UPDATE recipient_emails SET next_send_date=$1, sent_count=sent_count + 1 WHERE id=$2", [nextSendAtDate, recipient.id])
 
         await incrementEmailsSentToday(client, campaign.campaign_id);
@@ -198,7 +198,13 @@ JOIN campaign_sequence AS cs ON cs.email_template_id=et.id
 WHERE cs.sequence_order=$1 AND cs.campaign_id=$2
   `
   const emailTemplateResponse = await client.query(emailTemplateQuery, [sentCount, campaign.campaign_id])
-  if (emailTemplateResponse.rowCount === 0) return null
+  if (emailTemplateResponse.rowCount === 0){
+    // email template cant be found because the sequence order is greater than the number of email templates in the campaign
+    // which means the sequence should have been complete for this recipient
+    await client.query("UPDATE recipient_emails SET sent_count=$1 WHERE id=$2", [sentCount, recipient.id])
+
+     return null
+  }
   const emailTemplate = emailTemplateResponse.rows[0]
 
   // compare whether the days delay from the last send are the same as the current day

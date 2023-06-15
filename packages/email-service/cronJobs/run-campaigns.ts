@@ -121,7 +121,7 @@ async function sendCampaignEmails() {
 
         await transporter.sendMail(sendMailOpts);
 
-        await client.query("UPDATE sent_emails SET email_template_id=$1, sent_at= now()", [emailTemplateId])
+        await client.query("UPDATE sent_emails SET email_template_id=$1, sent_at= now() WHERE id=$2", [emailTemplateId,sentEmailId])
         await client.query("UPDATE recipient_emails SET next_send_date=$1, sent_count=sent_count + 1 WHERE id=$2", [nextSendAtDate, recipient.id])
 
         await incrementEmailsSentToday(client, campaign.campaign_id);

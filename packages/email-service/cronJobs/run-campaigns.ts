@@ -187,7 +187,10 @@ async function getSendMailOptions(
 
   // count how many emails have already been sent to the user to determine which email to send next in the sequence
   const emailCount = await client.query("SELECT COUNT(*) FROM sent_emails WHERE recipient_id = $1", [recipient.id])
-  const sentCount = emailCount.rows[0].count
+  let sentCount = emailCount.rows[0].count
+  // subtract 1 from the sent count to get the actual sent count because before this function is called a temporary sent_email record is inserted into the database
+  // to be able to generate the sentEmailId parameter
+  sentCount = sentCount - 1
 
   const emailTemplateQuery = `
 SELECT cs.days_delay, et.* FROM email_templates AS et 

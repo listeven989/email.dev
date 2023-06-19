@@ -130,7 +130,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    signUp(email: String!, password: String!): AuthPayload!
+    signup(email: String!, password: String!): AuthPayload!
     login(email: String!, password: String!): AuthPayload!
 
     archiveCampaign(id: ID!): Campaign
@@ -416,8 +416,11 @@ const resolvers = {
       );
       return result.rows[0];
     },
-    signUp: async (_: any, { email, password }: any) => {
+    signup: async (_: any, { email, password }: any) => {
+
       const hashedPassword = await bcrypt.hash(password, 10);
+
+  
       const result = await pool.query(
         "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
         [email, hashedPassword]
@@ -431,6 +434,7 @@ const resolvers = {
           expiresIn: "30d",
         }
       );
+
 
       return { token, user };
     },

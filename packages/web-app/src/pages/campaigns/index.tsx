@@ -18,7 +18,7 @@ import {
   Badge,
   useColorModeValue,
   Icon,
-  Tooltip
+  Tooltip,
 } from "@chakra-ui/react";
 import { WarningTwoIcon } from "@chakra-ui/icons";
 
@@ -88,7 +88,6 @@ const CampaignRow = ({
     <Tr key={campaign.id}>
       <Td textAlign={"center"}>
         <Link href={`/campaigns/${campaign.id}`} passHref>
-
           <Text
             as="a"
             color="blue.500"
@@ -96,13 +95,12 @@ const CampaignRow = ({
             _hover={{ textDecoration: "underline" }}
           >
             {campaign.name}
-
           </Text>
-          {campaign.error &&
+          {campaign.error && (
             <Tooltip label={`Auto paused due to error: ${campaign.error}`}>
               <WarningTwoIcon boxSize={6} color={"red.500"} />
             </Tooltip>
-          }
+          )}
         </Link>
       </Td>
       <Td textAlign={"center"}>{campaign.reply_to_email_address}</Td>
@@ -122,8 +120,8 @@ const CampaignRow = ({
             campaign.status === "active"
               ? "green"
               : campaign.status === "completed"
-                ? "purple"
-                : "red"
+              ? "purple"
+              : "red"
           }
           borderRadius="md"
           px={2}
@@ -200,6 +198,8 @@ const Campaigns = () => {
 
   const campaigns = data.campaigns;
 
+  // if campaigns is empty tell them to start a campaign by clicking on "New Campaigns"
+
   return (
     <Container maxW="container.xl" py={12}>
       <VStack spacing={6} align="start" w="100%">
@@ -222,53 +222,58 @@ const Campaigns = () => {
           </Link> */}
         </Flex>
         <Box w="100%">
-          <Table
-            variant="simple"
-            colorScheme="gray"
-            borderWidth="1px"
-            borderRadius="md"
-            overflow="hidden"
-            bg={bg}
-          >
-            <Thead bg="gray.500">
-              <Tr>
-                <Th color="white" fontWeight="bold" textAlign="center">
-                  Name
-                </Th>
-                <Th color="white" fontWeight="bold" textAlign="center">
-                  Reply To
-                </Th>
-                <Th color="white" fontWeight="bold" textAlign="center">
-                  Daily Limit
-                </Th>
-                <Th color="white" fontWeight="bold" textAlign="center">
-                  Sent Today
-                </Th>
-                <Th color="white" fontWeight="bold" textAlign="center">
-                  Recipients
-                </Th>
-                <Th color="white" fontWeight="bold" textAlign="center">
-                  Total Sent
-                </Th>
-                <Th color="white" fontWeight="bold" textAlign="center">
-                  Status
-                </Th>
-                <Th color="white" fontWeight="bold" textAlign="center">
-                  Action
-                </Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {campaigns.map((campaign: any) => (
-                <CampaignRow
-                  campaign={campaign}
-                  key={campaign.id}
-                  toggleCampaignStatus={toggleCampaignStatus}
-                  archiveCampaign={archiveCampaign}
-                />
-              ))}
-            </Tbody>
-          </Table>
+          {/* if campaigns is empty tell them to start a campaign by clicking on "New Campaigns" */}
+          {campaigns.length === 0 ? (
+            <Text>{'You don\'t have any campaigns yet. Start a new campaign by clicking on "New Campaigns" tab and add some new email accounts with the "Email Accounts" tab.'}</Text>
+          ) : (
+            <Table
+              variant="simple"
+              colorScheme="gray"
+              borderWidth="1px"
+              borderRadius="md"
+              overflow="hidden"
+              bg={bg}
+            >
+              <Thead bg="gray.500">
+                <Tr>
+                  <Th color="white" fontWeight="bold" textAlign="center">
+                    Name
+                  </Th>
+                  <Th color="white" fontWeight="bold" textAlign="center">
+                    Reply To
+                  </Th>
+                  <Th color="white" fontWeight="bold" textAlign="center">
+                    Daily Limit
+                  </Th>
+                  <Th color="white" fontWeight="bold" textAlign="center">
+                    Sent Today
+                  </Th>
+                  <Th color="white" fontWeight="bold" textAlign="center">
+                    Recipients
+                  </Th>
+                  <Th color="white" fontWeight="bold" textAlign="center">
+                    Total Sent
+                  </Th>
+                  <Th color="white" fontWeight="bold" textAlign="center">
+                    Status
+                  </Th>
+                  <Th color="white" fontWeight="bold" textAlign="center">
+                    Action
+                  </Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {campaigns.map((campaign: any) => (
+                  <CampaignRow
+                    campaign={campaign}
+                    key={campaign.id}
+                    toggleCampaignStatus={toggleCampaignStatus}
+                    archiveCampaign={archiveCampaign}
+                  />
+                ))}
+              </Tbody>
+            </Table>
+          )}
         </Box>
       </VStack>
     </Container>

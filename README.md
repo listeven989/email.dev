@@ -1,108 +1,91 @@
-# Why?
+# email.dev – Open-Source Email Outbound Platform
 
-You spent 2 weeks setting up campaigns on your favorite email outbound tool (instantly, replyio, lem something). 
+> Self-hosted or SaaS. Unlimited senders, limitless campaigns, and **code-level control** when you need that one extra feature your current tool won’t ship.
 
-Your email outbounds are running great. 
+[Live Demo](https://emaildev.vercel.app)   |   Archived Repo (read-only)
 
-Then, you realize you need X feature. 
+---
 
-Or Y feature is broken in your current email tool. 
+## Why email.dev?
 
-Html emails coming out horribly wrong? Opens tracking are horribly inaccurate. Link tracking is missing?
+Commercial outbound tools lock you into missing/broken features, slow support, and zero source access.  
+**email.dev** flips the model:
 
-**Whack.**
+- **100 % open source.** Fork, audit, and extend at will.  
+- **Own your infra.** Host anywhere (Docker/K8s, Render, Fly, etc.).  
+- **Rapid iteration.** Ship a PR → merge → feature live. No vendor wait.
 
-You email customer support. None of them are developers or do anything to fix your problem.
+---
 
-So now you need to look for an alternative email outbound to do/fix that X, Y, and Z feature/bug. _Again..._
+## Feature Matrix
 
-You spend hours digging through sites and forums testing different ones out.
+| Area | Status |
+|------|--------|
+| Unlimited sender addresses | ✅ |
+| Any SMTP provider (Zoho, Gmail, G-Suite, Yahoo, …) | ✅ |
+| Unlimited outbound volume | ✅ |
+| Campaign grouping & daily send limits | ✅ |
+| Link-click + open tracking | ✅ |
+| HTML & plain-text templates | ✅ |
+| Newsletter / Mailchimp-style blasts | ✅ |
+| Roadmap – see [Issues](../../issues) | 🚧 |
 
-**Hours later.**
+---
 
-Ok, now you found one. 
+## Architecture
 
-Time to move all your campaigns to a new tool. Figure out which people you already emailed or haven't.  Re-setup up all your campaigns.
+packages/
+├─ email-service/ ⟵ crons, workers, DB migrations
+├─ graphql-server/ ⟵ API consumed by web-app
+├─ web-app/ ⟵ Next.js front-end (campaign UI)
+└─ tracking-service/ ⟵ Express endpoints for opens / clicks
 
-But wait.....
 
-Hold up............
+- **Data store:** PostgreSQL  
+- **Queue / cron:** node-cron workers inside `email-service`  
+- **Workspace:** pnpm monorepo
 
-Wait a second..................
+---
 
-**Here's a crazy idea.**
-
-```
-
-Why not just code that feature for your existing email tool? Or fix that bug?
-
-What if everything was open sourced so that if the team doesn't fix your issue you can do it yourself?
-
-```
-
-That's what this is for. 
-
-The completely open-sourced email outbound saas app. You own all the code and can change anything. You can host your own, or use our hosted version.
-
-You can do email outbounds. You can do mailchimp like newsletters. And much, much more.
-
-Best of all, if you need any features - just code it, open a PR, and _viola_ - once its merged to main - it's live.
-
-You can use it here: https://emaildev.vercel.app. Or go ahead and host your own version.
-
-## Current Features
-
-- unlimited sender email addresses 
-- support for any smtp email provider (e.g zoho mail, google suites, gmail, yahoo)
-- unlimited outbound emails
-- campaign support (group together email addresses and email templates to send out)
-- campaign limits (configure how many emails you'd like to be sent out in each campaign each day)
-- you can host this anywhere you'd like (the production version uses render.com)
-- link click tracking, every link in an email is tracked and you can see which links are clicked by recipients
-- email open tracking
-- full support for html emails
-- full support for text emails
-
-## Upcoming features
-
-See the Github `Issues` section for new features that are being added. Feel free to request more features there as well.
-
-## Common commands
+## Quick Start (local)
 
 ```bash
-# development / setup
-pnpm i
+# 1. clone & install
+git clone https://github.com/listeven989/email.dev.git
+cd email.dev
+pnpm install
 
-# development / running local
-pnpm --filter email-service cron:all
-pnpm --filter web-app dev
-pnpm --filter graphql-server start
-pnpm --filter tracking-service start
+# 2. configure environment
+cp .env.example .env        # fill SMTP keys, DB URL, etc.
 
-# new database migrations
+# 3. bootstrap database
 pnpm --filter email-service setup:db
 
-# production / build
-pnpm --filter graphql-server build
-pnpm --filter graphql-server serve
-
-pnpm --filter web-app build
-pnpm --filter web-app start
+# 4. run all services (separate shells or tmux panes)
+pnpm --filter email-service cron:all
+pnpm --filter graphql-server start
+pnpm --filter tracking-service start
+pnpm --filter web-app dev   # http://localhost:3000
 ```
 
-## Packages
+Production Build
+```bash
+# build binaries
+pnpm --filter graphql-server build
+pnpm --filter web-app build
 
-email-service
-- runs all the crons and background workers to ensure all the emails are sent out in a timely manner
-- also contains the database migrations (setup.sql)
+# start
+pnpm --filter graphql-server serve
+pnpm --filter web-app start
 
-web-app
-- web app for this tool you use this to create the campaigns, manage them etc
+```
 
-graphql-server
-- backend for the web-app, creates campaigns, adds emails, etc
+Deploy anywhere that supports Node 18+ & PostgreSQL (Render, Fly, DigitalOcean, AWS, etc.).
+Tip: rename tracking endpoint (newsletter-*.yourdomain.com) to dodge spam heuristics.
 
-tracking-service
-- express server with a couple of endpoints for tracking opens, link clicks etc
-- when the email-service cron sends out emails it appends <img> tags with a link to the tracking service to track opens
-- when deploy do a euphemism like newsletter-xxx.render.com instead of the name tracking-xxx or tracking-service-xxx (so google doesn't block it)
+Run `pnpm test` (if you add unit tests).
+
+Open a PR – include context, screenshots, and migration notes if DB changes.
+
+Maintainers will review & merge; GitHub Actions auto-deploys the demo.
+

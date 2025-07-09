@@ -34,12 +34,13 @@ Commercial outbound tools lock you into missing/broken features, slow support, a
 
 ## Architecture
 
+```
 packages/
 ├─ email-service/ ⟵ crons, workers, DB migrations
 ├─ graphql-server/ ⟵ API consumed by web-app
 ├─ web-app/ ⟵ Next.js front-end (campaign UI)
 └─ tracking-service/ ⟵ Express endpoints for opens / clicks
-
+```
 
 - **Data store:** PostgreSQL  
 - **Queue / cron:** node-cron workers inside `email-service`  
